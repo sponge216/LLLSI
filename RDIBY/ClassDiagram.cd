@@ -1,0 +1,227 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="RTMPacket" Collapsed="true">
+    <Position X="2" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAAAAAAAAEAAAAAAAAABCAAAAAAQAAAAAAA=</HashCode>
+      <FileName>protocols.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RTEMPacket" Collapsed="true">
+    <Position X="1" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAQAAAAAAIAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>protocols.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RTSMPacket" Collapsed="true">
+    <Position X="3" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAIAAACAAAAAAAAAAAAoAAAAAAAAAAAAAAAAQ=</HashCode>
+      <FileName>protocols.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ThreadSafeQueue" Collapsed="true">
+    <Position X="6" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAAAAAQAAAAAACAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>datastructures.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BaseSocket" Collapsed="true">
+    <Position X="2.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAIAAAAAAAAAAAAAAEAAAAAAAAAgAAAAAAAAAAEAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HostSocket" Collapsed="true">
+    <Position X="1" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientSocket" Collapsed="true">
+    <Position X="2.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ServerSocket" Collapsed="true">
+    <Position X="4.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientNetworkManager" Collapsed="true">
+    <Position X="2.75" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAhAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="clientSocket" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="HostNetworkManager" Collapsed="true">
+    <Position X="0.5" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="hostSocket" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ServerNetworkManager" Collapsed="true">
+    <Position X="5" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>network.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="serverSocket" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ThreadManager" Collapsed="true">
+    <Position X="6" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAAAAAAAAAAACAAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>concurrency.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VideoCapture" Collapsed="true">
+    <Position X="7.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>video.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VideoCodec" Collapsed="true">
+    <Position X="9.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAAAAAAAABAAAAAAAAAAEAAAAAAAACA=</HashCode>
+      <FileName>video.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VideoManager" Collapsed="true">
+    <Position X="8.5" Y="3.5" Width="1.5" />
+    <AssociationLine Name="videoCodec" Type="VideoCodec">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.083" Y="0.11" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAgAAAAA=</HashCode>
+      <FileName>video.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="videoCapture" />
+      <Field Name="videoCodec" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="AudioCapture" Collapsed="true">
+    <Position X="11.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAA=</HashCode>
+      <FileName>audio.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AudioCodec" Collapsed="true">
+    <Position X="13.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAAAAAEAABAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>audio.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AudioManager" Collapsed="true">
+    <Position X="12.5" Y="3.5" Width="1.5" />
+    <AssociationLine Name="AudioCodec" Type="AudioCodec">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.089" Y="0.074" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAQAAACAAAA=</HashCode>
+      <FileName>audio.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="AudioCapture" />
+      <Field Name="AudioCodec" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MediaManager" Collapsed="true">
+    <Position X="10.5" Y="1.5" Width="1.5" />
+    <AssociationLine Name="audioManager" Type="AudioManager" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="11.25" Y="2.062" />
+        <Point X="11.25" Y="3.812" />
+        <Point X="12.5" Y="3.812" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="videoManager" Type="VideoManager" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="11.125" Y="2.062" />
+        <Point X="11.125" Y="3.812" />
+        <Point X="10" Y="3.812" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>media.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="audioManager" />
+      <Field Name="videoManager" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="MouseEventManager" Collapsed="true">
+    <Position X="15" Y="3.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>events.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="KeyboardEventManager" Collapsed="true">
+    <Position X="18.25" Y="3.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>events.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EventManager" Collapsed="true">
+    <Position X="16.75" Y="1.5" Width="1.5" />
+    <AssociationLine Name="keyboardEventManager" Type="KeyboardEventManager" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="17.734" Y="2.062" />
+        <Point X="17.734" Y="3.812" />
+        <Point X="18.25" Y="3.812" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.185" Y="0.294" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="mouseEventManager" Type="MouseEventManager" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="17.219" Y="2.062" />
+        <Point X="17.219" Y="3.812" />
+        <Point X="16.75" Y="3.812" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.157" Y="0.336" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAgAAAAA=</HashCode>
+      <FileName>events.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="keyboardEventManager" />
+      <Field Name="mouseEventManager" />
+    </ShowAsAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
