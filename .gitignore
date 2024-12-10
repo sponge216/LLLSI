@@ -1,1 +1,22 @@
-**/.vs/
+# Ignore this .gitignore file
+.gitignore
+
+# Ignore the x64 folder
+x64/
+
+# Ignore the .vs folder
+.vs/
+
+# Ignore the .git folder
+.git/
+
+# Ignore .sln files
+*.sln
+
+# Allow only .h and .cpp files
+# Ignore everything
+*
+# Allow .h and .cpp files
+!*.h
+!*.cpp
+!RDIBY/

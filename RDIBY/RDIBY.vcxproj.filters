@@ -13,28 +13,57 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\sockets">
-      <UniqueIdentifier>{cf34c1a2-bdee-44cc-99cc-ea7dd5ae41d3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\protocols">
       <UniqueIdentifier>{ab8ae71e-59f9-43bf-98e2-132cf3bc88bd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\data_structures">
       <UniqueIdentifier>{553da491-1dd2-440b-bee4-867174a9d3ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\network">
+      <UniqueIdentifier>{cf34c1a2-bdee-44cc-99cc-ea7dd5ae41d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\concurrency">
+      <UniqueIdentifier>{9d7c4f33-ed74-4b98-b6ef-6c7ef3756e6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\media">
+      <UniqueIdentifier>{f6403c25-1072-4a80-9cdc-c7a6024e2066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\events">
+      <UniqueIdentifier>{884653a8-430d-46d5-9164-6edf665dda6c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="basesocket.cpp">
-      <Filter>Source Files\sockets</Filter>
+    <ClCompile Include="network.cpp">
+      <Filter>Source Files\network</Filter>
     </ClCompile>
-    <ClCompile Include="protocols.cpp">
+    <ClCompile Include="protocols.h">
       <Filter>Source Files\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="datastructures.cpp">
+    <ClCompile Include="datastructures.h">
       <Filter>Source Files\data_structures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="network.h">
+      <Filter>Source Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="concurrency.h">
+      <Filter>Source Files\concurrency</Filter>
+    </ClInclude>
+    <ClInclude Include="video.h">
+      <Filter>Source Files\media</Filter>
+    </ClInclude>
+    <ClInclude Include="audio.h">
+      <Filter>Source Files\media</Filter>
+    </ClInclude>
+    <ClInclude Include="events.h">
+      <Filter>Source Files\events</Filter>
+    </ClInclude>
+    <ClInclude Include="media.h">
+      <Filter>Source Files\media</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
