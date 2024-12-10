@@ -6,7 +6,6 @@
 #include <Windows.h>
 #include <queue>
 #include <stdexcept>
-#include "audio.h"
 
 template <typename T> class ThreadSafeQueue {
 public:
@@ -14,6 +13,10 @@ public:
 		InitializeCriticalSection(&this->access);
 		this->queue_semaphore = queue_semaphore = CreateSemaphore(NULL, 0, MAXINT, NULL);
 
+	}
+	~ThreadSafeQueue() {
+		DeleteCriticalSection(&this->access);
+		CloseHandle(this->queue_semaphore);
 	}
 	/// <summary>
 	/// Pushes item into the queue.
@@ -34,7 +37,10 @@ public:
 	/// <summary>
 	/// Pops item from queue.
 	/// </summary>
-	/// <returns>failure - nullptr </returns>
+	/// <returns>
+	/// success - first item from queue
+	/// runtime errors - "semaphore timed out", "empty queue"
+	/// </returns>
 	T Pop() {
 		if (WaitForSingleObject(this->queue_semaphore, this->timeout) != WAIT_OBJECT_0) // check if semaphore is signaled.
 			throw std::runtime_error("semaphore timed out");
