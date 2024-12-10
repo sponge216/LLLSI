@@ -21,10 +21,10 @@
       <FileName>protocols.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="ThreadSafeQueue" Collapsed="true">
+  <Class Name="ThreadSafeQueue&lt;T&gt;" Collapsed="true">
     <Position X="6" Y="6.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAEAAAAAAAQAAAAAACAAAAAAAAAAAAACAA=</HashCode>
+      <HashCode>AAAAAAAAQAAEAAAAAABQAAQAAACAAAAAAABCAAAACAA=</HashCode>
       <FileName>datastructures.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -181,29 +181,19 @@
   <Class Name="MouseEventManager" Collapsed="true">
     <Position X="15" Y="3.5" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAABAAAAAgAAAkAAAAAAAACAAAAAgAQAAA=</HashCode>
       <FileName>events.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KeyboardEventManager" Collapsed="true">
     <Position X="18.25" Y="3.5" Width="2" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AQAAAAAAABCAAAACAAAAAAAAAAAAAECAAAAAACAAAAA=</HashCode>
       <FileName>events.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="EventManager" Collapsed="true">
     <Position X="16.75" Y="1.5" Width="1.5" />
-    <AssociationLine Name="keyboardEventManager" Type="KeyboardEventManager" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="17.734" Y="2.062" />
-        <Point X="17.734" Y="3.812" />
-        <Point X="18.25" Y="3.812" />
-      </Path>
-      <MemberNameLabel ManuallyPlaced="true">
-        <Position X="-1.185" Y="0.294" />
-      </MemberNameLabel>
-    </AssociationLine>
     <AssociationLine Name="mouseEventManager" Type="MouseEventManager" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="17.219" Y="2.062" />
@@ -214,13 +204,23 @@
         <Position X="-1.157" Y="0.336" />
       </MemberNameLabel>
     </AssociationLine>
+    <AssociationLine Name="keyboardEventManager" Type="KeyboardEventManager" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="17.734" Y="2.062" />
+        <Point X="17.734" Y="3.812" />
+        <Point X="18.25" Y="3.812" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.185" Y="0.294" />
+      </MemberNameLabel>
+    </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAgAAAAA=</HashCode>
+      <HashCode>AAAAABAAAAAAAAAAAAAAAAAAAAEAAAAAAABAAgAAAAA=</HashCode>
       <FileName>events.h</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
-      <Field Name="keyboardEventManager" />
       <Field Name="mouseEventManager" />
+      <Field Name="keyboardEventManager" />
     </ShowAsAssociation>
   </Class>
   <Font Name="Segoe UI" Size="9" />
