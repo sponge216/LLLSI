@@ -1,95 +1,97 @@
 // network.h
 
 #ifndef APP_NETWORK_H
-#define APP_NETWORK_H
-#define DEFAULT_PORT "30527"
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
+namespace network {
 
-class BaseSocket {
+#define APP_NETWORK_H
+#define DEFAULT_PORT "30527"
 
-public:
-	bool initialize() {
-		this->hints.ai_family = AF_INET; // set internet family.
-		this->hints.ai_socktype = SOCK_STREAM; //set socket type. We use TCP so we set it to sock_stream.
-		this->hints.ai_protocol = IPPROTO_TCP;
-		this->hints.ai_flags = AI_PASSIVE;
+	class BaseSocket {
 
-		auto res = getaddrinfo(NULL, DEFAULT_PORT, &this->hints, &this->addrInfo);
+	public:
+		virtual bool initializeTCP() = 0;
+		virtual bool initializeUDP() = 0;
 
-		this->sock = socket(this->addrInfo->ai_family, this->addrInfo->ai_socktype, this->addrInfo->ai_protocol);
-	}
+	protected:
+		SOCKET sock;
+		struct addrinfo* addrInfo = NULL; // the address info struct, holds all info about the address.
+		struct addrinfo* hints = { 0 }; // used to set the socket's behavior and address
+	private:
+		static const WSADATA wsaData;
+	};
 
-protected:
-	static WSADATA wsaData;
-	SOCKET sock;
-	struct addrinfo* addrInfo = NULL, // the address info struct, holds all info about the address.
-		hints = { 0 }; // used to set the socket's behavior and address
-};
+	/// <summary>
+	///  socket for hosts.
+	/// </summary>
+	class HostSocket : public BaseSocket {
 
-/// <summary>
-///  socket for hosts.
-/// </summary>
-class HostSocket : public BaseSocket {
+	public:
+		HostSocket();
+	};
+	/// <summary>
+	/// socket for clients.
+	/// </summary>
+	class ClientSocket : public BaseSocket {
 
-public:
-	HostSocket();
-};
-/// <summary>
-/// socket for clients.
-/// </summary>
-class ClientSocket : public BaseSocket {
+	public:
+		ClientSocket();
+		~ClientSocket();
+		bool initializeTCP() override;
+		bool initializeUDP() override;
+	};
+	/// <summary>
+	/// socket for servers.
+	/// </summary>
+	class ServerSocket : public BaseSocket {
 
-public:
-	ClientSocket();
-};
-/// <summary>
-/// socket for servers.
-/// </summary>
-class ServerSocket : public BaseSocket {
+	public:
+		ServerSocket();
+		~ServerSocket();
+		bool initialize();
+	};
 
-public:
-	ServerSocket();
+	/// <summary>
+	/// 
+	/// </summary>
+	class ClientNetworkManager {
 
-};
+	public:
+		ClientNetworkManager();
 
-/// <summary>
-/// 
-/// </summary>
-class ClientNetworkManager {
+	private:
+		ClientSocket clientSocket;
 
-public:
-	ClientNetworkManager();
+	};
+	/// <summary>
+	/// 
+	/// </summary>
+	class HostNetworkManager {
 
-private:
-	ClientSocket clientSocket;
+	public:
+		HostNetworkManager();
+		~HostNetworkManager();
 
-};
-/// <summary>
-/// 
-/// </summary>
-class HostNetworkManager {
+	private:
+		HostSocket hostSocket;
 
-public:
-	HostNetworkManager();
+	};
+	/// <summary>
+	/// 
+	/// </summary>
+	class ServerNetworkManager {
+	public:
+		ServerNetworkManager();
+		~ServerNetworkManager();
 
-private:
-	HostSocket hostSocket;
+	private:
+		ServerSocket serverSocket;
 
-};
-/// <summary>
-/// 
-/// </summary>
-class ServerNetworkManager {
-public:
-	ServerNetworkManager();
-
-private:
-	ServerSocket serverSocket;
-
-};
+	};
+}
 #endif //APP_NETWORK_H
