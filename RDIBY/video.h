@@ -3,7 +3,6 @@
 #ifndef APP_VIDEO_H
 #define APP_VIDEO_H
 
-
 class VideoCapture {
 public:
 	VideoCapture();
@@ -26,6 +25,5 @@ public:
 
 	VideoManager();
 };
-
 
 #endif //APP_VIDEO_H

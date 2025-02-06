@@ -10,7 +10,6 @@
 
 namespace network {
 
-#define DEFAULT_PORT "30527"
 
 	class BaseSocket {
 
@@ -21,19 +20,7 @@ namespace network {
 	protected:
 		SOCKET sock;
 		struct addrinfo* addrInfo = NULL; // the address info struct, holds all info about the address.
-		struct addrinfo* hints = { 0 }; // used to set the socket's behavior and address
-
-	};
-
-	class ITCPSocket {
-	public:
-		virtual bool initTCP() = 0;
-
-	};
-
-	class IUDPSocket {
-	public:
-		virtual bool initUDP() = 0;
+		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
 
 	};
 }

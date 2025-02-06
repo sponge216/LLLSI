@@ -8,15 +8,14 @@ namespace host {
 		///  socket for hosts.
 		/// </summary>
 	class HostSocket :
-		public network::BaseSocket,
-		public network::ITCPSocket,
-		public network::IUDPSocket {
+		public network::BaseSocket
+	{
 
 	public:
 		HostSocket();
 		~HostSocket();
-		bool initTCP() override;
-		bool initUDP() override;
+		bool initTCP();
+		bool initUDP();
 		bool send(CHAR* data) override;
 		bool recv() override;
 	};

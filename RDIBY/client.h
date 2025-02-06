@@ -9,20 +9,16 @@ namespace client {
 	/// <summary>
 	/// socket for clients.
 	/// </summary>
-	class ClientSocket :
-		public network::BaseSocket,
-		public network::ITCPSocket,
-		public network::IUDPSocket {
-
+	class ClientSocket : public network::BaseSocket
+	{
 	public:
 		ClientSocket();
 		~ClientSocket();
-		bool initTCP() override;
-		bool initUDP() override;
+		bool initTCP();
+		bool initUDP();
 		bool send(CHAR* data) override;
 		bool recv() override;
 	};
-
 
 	/// <summary>
 	/// 
@@ -39,5 +35,4 @@ namespace client {
 
 	};
 }
-
 #endif // APP_NETWORK_CLIENT_H

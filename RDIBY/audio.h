@@ -3,7 +3,6 @@
 #ifndef APP_AUDIO_H
 #define APP_AUDIO_H
 
-
 class AudioCapture {
 public:
 	AudioCapture();
