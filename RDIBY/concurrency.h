@@ -7,27 +7,18 @@
 
 namespace concurrency {
 #include <processthreadsapi.h>
-	class ThreadManager {
-	public:
-		ThreadManager();
-		~ThreadManager();
-		bool createNewThread(DWORD WINAPI threadFunction, LPVOID params);
-		bool killThread(HANDLE hThread);
-		bool killLastThread(HANDLE hThread);
-		bool killFirstThread(HANDLE hThread);
-	private:
-		std::vector<ConThread> threadVector;
-	};
-
-	// ---------------------------------------
-
+#include <handleapi.h>
 	class ConThread {
 	public:
 		ConThread();
+		ConThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
+			SIZE_T dwStackSize,
+			LPTHREAD_START_ROUTINE lpStartAddress,
+			LPVOID lpParameter,
+			DWORD dwCreationFlags,
+			LPDWORD lpThreadId);
 		~ConThread();
 
-
-	private:
 		HANDLE hThread;
 		LPSECURITY_ATTRIBUTES lpThreadAttributes;
 		SIZE_T dwStackSize;
@@ -35,6 +26,25 @@ namespace concurrency {
 		LPVOID lpParameter;
 		DWORD dwCreationFlags;
 		LPDWORD lpThreadId;
+
 	};
+
+	class ThreadManager {
+	public:
+		ThreadManager();
+		~ThreadManager();
+
+		bool createNewThread(ConThread ctThread);
+
+		bool killThread(HANDLE hThread);
+		bool killLastThread();
+		bool killFirstThread();
+	private:
+		std::vector<ConThread> threadVector;
+	};
+
+	// ---------------------------------------
+
+
 }
 #endif //APP_CONCURRENCY_H
