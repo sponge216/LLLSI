@@ -3,15 +3,15 @@
 namespace server {
 
 	server::ServerSocket::ServerSocket() {
-		this->init();
+		
 	}
 	bool server::ServerSocket::init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM) {
-		if (this->addrInfo != NULL) {
+		if (this->pAddrInfo != NULL) {
 			this->hints = { 0 };
-			this->addrInfo = NULL;
+			this->pAddrInfo = NULL;
 		}
 		SOCKET serverSocket;
-		struct addrinfo* addrInfo = NULL; // the address info struct, holds all info about the address.
+		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
 		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
 
 		hints.ai_family = ai_family; // set internet family.
@@ -20,47 +20,50 @@ namespace server {
 		hints.ai_flags = ai_flags;
 
 		// Resolve the local address and port to be used by the server
-		int res = getaddrinfo(NULL, port, &hints, &addrInfo);
+		int res = getaddrinfo(NULL, port, &hints, &pAddrInfo);
 		if (res != 0) {
 			printf("getaddrinfo failed: %d\n", res);
 			WSACleanup();
 			return false;
 		}
 
-		if ((serverSocket = socket(addrInfo->ai_family, addrInfo->ai_socktype, addrInfo->ai_protocol)) <= 1) {
+		if ((serverSocket = socket(pAddrInfo->ai_family, pAddrInfo->ai_socktype, pAddrInfo->ai_protocol)) <= 1) {
 			printf("Error at socket: %ld\n", WSAGetLastError());
-			freeaddrinfo(addrInfo);
+			freeaddrinfo(pAddrInfo);
 			WSACleanup();
 			return false;
 		}
 
 		if (serverSocket == INVALID_SOCKET) {
 			printf("Error at socket: %ld\n", WSAGetLastError());
-			freeaddrinfo(addrInfo);
+			freeaddrinfo(pAddrInfo);
 			WSACleanup();
 			return false;
 		}
 
-		if (bind(serverSocket, addrInfo->ai_addr, (INT)addrInfo->ai_addrlen) == SOCKET_ERROR) {
+		if (bind(serverSocket, pAddrInfo->ai_addr, (INT)pAddrInfo->ai_addrlen) == SOCKET_ERROR) {
 			printf("bind failed with error: %d\n", WSAGetLastError());
-			freeaddrinfo(addrInfo);
+			freeaddrinfo(pAddrInfo);
 			closesocket(serverSocket);
 			WSACleanup();
 			return false;
 		}
 
-		printf("Server Socket initiated with all good!\n");
+		printf("Server Socket initiated!\n");
 		if (listen(serverSocket, backlog) < 0) {
 			printf("Listen failed on Server Socket with error: %d\n", WSAGetLastError);
 			return false;
 		}
 
 		this->hints = hints;
-		this->addrInfo = addrInfo;
+		this->pAddrInfo = pAddrInfo;
 		return true;
 	}
 	server::ServerSocket::~ServerSocket() {
+		fprintf(stdout, "Closing Server Socket. FD - %d", this->sock);
 
+		freeaddrinfo(this->pAddrInfo);
+		closesocket(this->sock);
 	}
 
 	// --------------------------------------- //

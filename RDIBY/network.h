@@ -10,16 +10,15 @@
 
 namespace network {
 
-
 	class BaseSocket {
 
 	public:
-		virtual bool send(CHAR* pData) = 0;
+		virtual bool send(CHAR* pData,SIZE_T dwTypeSize) = 0;
 		virtual bool recv() = 0;
 
 	protected:
 		SOCKET sock;
-		struct addrinfo* addrInfo = NULL; // the address info struct, holds all info about the address.
+		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
 		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
 
 	};

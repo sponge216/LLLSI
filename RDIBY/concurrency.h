@@ -8,6 +8,7 @@
 namespace concurrency {
 #include <processthreadsapi.h>
 #include <handleapi.h>
+#include <synchapi.h>
 	class ConThread {
 	public:
 		ConThread();
@@ -26,8 +27,9 @@ namespace concurrency {
 		LPVOID lpParameter;
 		DWORD dwCreationFlags;
 		LPDWORD lpThreadId;
-
 	};
+
+	// ---------------------------------------
 
 	class ThreadManager {
 	public:
@@ -39,12 +41,13 @@ namespace concurrency {
 		bool killThread(HANDLE hThread);
 		bool killLastThread();
 		bool killFirstThread();
+		
+		std::vector<HANDLE> ghStopEventVector;
 	private:
 		std::vector<ConThread> threadVector;
+		static constexpr DWORD dwTimeout = 1000;
+
+		bool addNewStopEvent();
 	};
-
-	// ---------------------------------------
-
-
 }
 #endif //APP_CONCURRENCY_H

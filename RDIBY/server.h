@@ -16,7 +16,7 @@ namespace server {
 		ServerSocket();
 		~ServerSocket();
 		bool init(PCSTR port, INT backlog, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype);
-		bool send(CHAR* data) override;
+		bool send(CHAR* data, SIZE_T dwTypeSize) override;
 		bool recv() override;
 	};
 
