@@ -9,9 +9,9 @@
 
 template <typename T> class ThreadSafeQueue {
 public:
-	ThreadSafeQueue() {}
+	ThreadSafeQueue();
 
-	~ThreadSafeQueue() {}
+	~ThreadSafeQueue();
 
 	/// <summary>
 	/// Pushes item into the queue.
@@ -19,7 +19,7 @@ public:
 	/// </summary>
 	/// <param name="item">- The variable being pushed into the queue</param>
 	/// <returns>success - 0, failure - System Error Code</returns>
-	DWORD Push(T item) {}
+	DWORD Push(T item);
 
 	/// <summary>
 	/// Pops item from queue.
@@ -28,9 +28,9 @@ public:
 	/// success - first item from queue
 	/// runtime errors - "semaphore timed out", "empty queue"
 	/// </returns>
-	T Pop() {}
+	T Pop();
 
-	T Peek() {}
+	T Peek();
 
 private:
 	std::queue<T> queue;
@@ -38,5 +38,4 @@ private:
 	HANDLE queue_semaphore;
 	const DWORD timeout = 3;
 };
-
 #endif //APP_DATASTRUCTURES_H

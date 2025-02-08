@@ -4,11 +4,25 @@
 #define APP_CONCURRENCY_H
 
 #include <vector>
-
-namespace concurrency {
+#include <iostream>
 #include <processthreadsapi.h>
 #include <handleapi.h>
 #include <synchapi.h>
+#include <memory>
+
+namespace concurrency {
+
+	struct HandleDeleter {
+		void operator()(HANDLE h) const {
+			if (h && h != INVALID_HANDLE_VALUE) {
+				CloseHandle(h);
+				std::cout << "Handle closed.\n";
+			}
+		}
+	};
+	
+	typedef std::unique_ptr<void, HandleDeleter> UniqueHandle; //
+
 	class ConThread {
 	public:
 		ConThread();
@@ -30,7 +44,7 @@ namespace concurrency {
 	};
 
 	// ---------------------------------------
-
+	//Developer is expected to have threads that listen to ghStopEvent
 	class ThreadManager {
 	public:
 		ThreadManager();
@@ -41,8 +55,10 @@ namespace concurrency {
 		bool killThread(HANDLE hThread);
 		bool killLastThread();
 		bool killFirstThread();
-		
-		std::vector<HANDLE> ghStopEventVector;
+
+		ConThread* pTarget;
+		std::vector<UniqueHandle> ghStopEventVector;
+
 	private:
 		std::vector<ConThread> threadVector;
 		static constexpr DWORD dwTimeout = 1000;

@@ -3,9 +3,9 @@
 namespace server {
 
 	server::ServerSocket::ServerSocket() {
-		
+		this->init();
 	}
-	bool server::ServerSocket::init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM) {
+	bool server::ServerSocket::init(PCSTR port, INT backlog, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype) {
 		if (this->pAddrInfo != NULL) {
 			this->hints = { 0 };
 			this->pAddrInfo = NULL;
@@ -51,7 +51,7 @@ namespace server {
 
 		printf("Server Socket initiated!\n");
 		if (listen(serverSocket, backlog) < 0) {
-			printf("Listen failed on Server Socket with error: %d\n", WSAGetLastError);
+			fprintf(stdout, "Listen failed on Server Socket with error: %ld\n", WSAGetLastError());
 			return false;
 		}
 
@@ -60,10 +60,17 @@ namespace server {
 		return true;
 	}
 	server::ServerSocket::~ServerSocket() {
-		fprintf(stdout, "Closing Server Socket. FD - %d", this->sock);
+		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
 
 		freeaddrinfo(this->pAddrInfo);
 		closesocket(this->sock);
+	}
+
+	bool server::ServerSocket::send(CHAR* data, SIZE_T dwTypeSize) {
+		return true;
+	}
+	bool server::ServerSocket::recv() {
+		return true;
 	}
 
 	// --------------------------------------- //

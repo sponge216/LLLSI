@@ -15,7 +15,7 @@ namespace server {
 	public:
 		ServerSocket();
 		~ServerSocket();
-		bool init(PCSTR port, INT backlog, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype);
+		bool init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM);
 		bool send(CHAR* data, SIZE_T dwTypeSize) override;
 		bool recv() override;
 	};

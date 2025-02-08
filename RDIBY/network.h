@@ -5,7 +5,8 @@
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-
+#include <memory>
+	
 #pragma comment(lib, "Ws2_32.lib")
 
 namespace network {

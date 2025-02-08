@@ -16,7 +16,7 @@ namespace client {
 		~ClientSocket();
 		bool initTCP();
 		bool initUDP();
-		bool send(CHAR* data) override;
+		bool send(CHAR* data, SIZE_T dwTypeSize) override;
 		bool recv() override;
 	};
 

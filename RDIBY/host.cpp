@@ -5,9 +5,9 @@ namespace host {
 		this->initTCP();
 	}
 	bool host::HostSocket::initTCP() {
-		if (this->addrInfo != NULL) {
+		if (this->pAddrInfo != NULL) {
 			this->hints = { 0 };
-			this->addrInfo = NULL;
+			this->pAddrInfo = NULL;
 		}
 		return true;
 	}
@@ -16,6 +16,12 @@ namespace host {
 	}
 	host::HostSocket::~HostSocket() {
 
+	}
+	bool host::HostSocket::send(CHAR* data, SIZE_T dwTypeSize) {
+		return true;
+	}
+	bool host::HostSocket::recv() {
+		return true;
 	}
 	// --------------------------------------- //
 

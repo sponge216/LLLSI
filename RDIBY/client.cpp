@@ -5,9 +5,9 @@ namespace client {
 		this->initTCP();
 	}
 	bool client::ClientSocket::initTCP() {
-		if (this->addrInfo != NULL) {
+		if (this->pAddrInfo != NULL) {
 			this->hints = { 0 };
-			this->addrInfo = NULL;
+			this->pAddrInfo = NULL;
 		}
 		return true;
 	}
@@ -16,6 +16,12 @@ namespace client {
 	}
 	client::ClientSocket::~ClientSocket() {
 
+	}
+	bool client::ClientSocket::send(CHAR* data, SIZE_T dwTypeSize) {
+		return true;
+	}
+	bool client::ClientSocket::recv() {
+		return true;
 	}
 
 	// --------------------------------------- //
