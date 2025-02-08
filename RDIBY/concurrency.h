@@ -59,7 +59,7 @@ namespace concurrency {
 		bool killThread(DWORD index);
 
 	private:
-		std::unordered_map<DWORD, pConThread> threadMap; // TODO: change to linkedlist
+		std::unordered_map<DWORD, pConThread> threadMap;
 		static constexpr auto TIMEOUT_INTERVAL = 1000;
 		static constexpr auto INITIAL_MAP_SIZE = 100;
 		
