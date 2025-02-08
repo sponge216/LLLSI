@@ -3,7 +3,7 @@
 #ifndef APP_CONCURRENCY_H
 #define APP_CONCURRENCY_H
 
-#include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <processthreadsapi.h>
 #include <handleapi.h>
@@ -20,21 +20,25 @@ namespace concurrency {
 			}
 		}
 	};
-	
-	typedef std::unique_ptr<void, HandleDeleter> UniqueHandle; //
+
+	typedef std::unique_ptr<void, HandleDeleter> UniqueHandle;
 
 	class ConThread {
 	public:
 		ConThread();
-		ConThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
+		ConThread(
+			HANDLE hStopEvent,
+			LPSECURITY_ATTRIBUTES lpThreadAttributes,
 			SIZE_T dwStackSize,
 			LPTHREAD_START_ROUTINE lpStartAddress,
 			LPVOID lpParameter,
 			DWORD dwCreationFlags,
-			LPDWORD lpThreadId);
+			LPDWORD lpThreadId
+		);
 		~ConThread();
 
-		HANDLE hThread;
+		UniqueHandle hThread;
+		UniqueHandle hStopEvent;
 		LPSECURITY_ATTRIBUTES lpThreadAttributes;
 		SIZE_T dwStackSize;
 		LPTHREAD_START_ROUTINE lpStartAddress;
@@ -42,7 +46,7 @@ namespace concurrency {
 		DWORD dwCreationFlags;
 		LPDWORD lpThreadId;
 	};
-
+	typedef ConThread* pConThread;
 	// ---------------------------------------
 	//Developer is expected to have threads that listen to ghStopEvent
 	class ThreadManager {
@@ -50,20 +54,15 @@ namespace concurrency {
 		ThreadManager();
 		~ThreadManager();
 
-		bool createNewThread(ConThread ctThread);
+		bool createNewThread(DWORD key, pConThread ctThread);
 
-		bool killThread(HANDLE hThread);
-		bool killLastThread();
-		bool killFirstThread();
-
-		ConThread* pTarget;
-		std::vector<UniqueHandle> ghStopEventVector;
+		bool killThread(DWORD index);
 
 	private:
-		std::vector<ConThread> threadVector;
-		static constexpr DWORD dwTimeout = 1000;
-
-		bool addNewStopEvent();
+		std::unordered_map<DWORD, pConThread> threadMap; // TODO: change to linkedlist
+		static constexpr auto TIMEOUT_INTERVAL = 1000;
+		static constexpr auto INITIAL_MAP_SIZE = 100;
+		
 	};
 }
 #endif //APP_CONCURRENCY_H

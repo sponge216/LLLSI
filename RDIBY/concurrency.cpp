@@ -18,8 +18,7 @@ namespace concurrency {
 		for (auto i = 0; i < this->ghStopEventVector.size(); i++) {
 			CloseHandle(this->ghStopEventVector[i].get()); // close event
 		}
-
-		this->ghStopEventVector.~vector(); // deconstruct event vector
+		//TODO: deconstructor is called recursively on an object's members, no point in this line.
 		this->threadVector.~vector(); // deconstruct thread vector
 		fprintf(stdout, "All ThreadManager's threads finished, deconstructor finished");
 	}
@@ -43,13 +42,51 @@ namespace concurrency {
 		return true;
 	}
 	bool concurrency::ThreadManager::killFirstThread() {
-		auto hEvent = this->ghStopEventVector[0].get();
+		auto hEvent = this->ghStopEventVector.front().get();
+		auto hThread = this->threadVector.front().hThread;
+
+		this->ghStopEventVector.erase(this->ghStopEventVector.begin() + 1);
+		this->threadVector.erase(this->threadVector.begin() + 1);
+
 		SetEvent(hEvent); // signal event
-		WaitForSingleObject(this->threadVector[0].hThread, concurrency::ThreadManager::dwTimeout); 
+		WaitForSingleObject(hThread, concurrency::ThreadManager::dwTimeout);
+		//TODO: check if successful!!
+		return true;
+	}
+	bool concurrency::ThreadManager::killLastThread() {
+		auto hEvent = this->ghStopEventVector.back().get();
+		auto hThread = this->threadVector.back().hThread;
+
+		this->ghStopEventVector.pop_back();
+		this->threadVector.pop_back();
+
+		SetEvent(hEvent); // signal event
+		WaitForSingleObject(hThread, concurrency::ThreadManager::dwTimeout);
+		//TODO: check if successful!!
+		return true;
+	}
+	bool concurrency::ThreadManager::killThread(DWORD index) {
+		auto hEvent = this->ghStopEventVector[index].get();
+		auto hThread = this->threadVector[index].hThread;
+
+		this->ghStopEventVector.erase(this->ghStopEventVector.begin() + index + 1);
+		this->threadVector.erase(this->threadVector.begin() + index + 1);
+
+		SetEvent(hEvent); // signal event
+		WaitForSingleObject(hThread, concurrency::ThreadManager::dwTimeout);
 		//TODO: check if successful!!
 		return true;
 	}
 	// ---------------------------	
+	concurrency::ConThread::ConThread() {
+		this->lpThreadAttributes = NULL;
+		this->dwStackSize = 0;
+		this->lpStartAddress = NULL;
+		this->lpParameter = NULL;
+		this->dwCreationFlags = 0;
+		this->lpThreadId = NULL;
+		this->hThread = NULL;
+	}
 	concurrency::ConThread::ConThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
 		this->lpThreadAttributes = lpThreadAttributes;
 		this->dwStackSize = dwStackSize;
@@ -57,11 +94,9 @@ namespace concurrency {
 		this->lpParameter = lpParameter;
 		this->dwCreationFlags = dwCreationFlags;
 		this->lpThreadId = lpThreadId;
+		this->hThread = NULL;
 	}
 	concurrency::ConThread::~ConThread() {
-		free(this->lpThreadAttributes);
-		free(this->lpParameter);
-		free(this->lpThreadId);
 		CloseHandle(this->hThread);
 		fprintf(stdout, "ConThread %d deconstructed", this->hThread);
 	}
