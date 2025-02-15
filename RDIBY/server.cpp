@@ -72,7 +72,16 @@ namespace server {
 	bool server::ServerSocket::recv() {
 		return true;
 	}
+	SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL) {
+		SOCKET clientSocket = accept(serverSocket, addr, addrLen);
+		if (clientSocket <= 1) {
+			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
+			WSACleanup();
+			return 0;
+		}
 
+		return clientSocket;
+	}
 	// --------------------------------------- //
 
 	server::ServerNetworkManager::ServerNetworkManager() {
