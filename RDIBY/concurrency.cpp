@@ -62,6 +62,17 @@ namespace concurrency {
 		this->hStopEvent = NULL;
 
 	}
+	concurrency::ConThread::ConThread(HANDLE hStopEvent, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter) {
+		this->lpThreadAttributes = NULL;
+		this->dwStackSize = 0;
+		this->lpStartAddress = lpStartAddress;
+		this->lpParameter = lpParameter;
+		this->dwCreationFlags = 0;
+		this->lpThreadId = NULL;
+		this->hThread = NULL;
+		this->hStopEvent = UniqueHandle(hStopEvent);
+
+	}
 
 	concurrency::ConThread::ConThread(HANDLE hStopEvent, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
 		this->lpThreadAttributes = lpThreadAttributes;

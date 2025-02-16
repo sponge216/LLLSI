@@ -2,7 +2,7 @@
 
 namespace server {
 
-	server::ServerSocket::ServerSocket() {
+	inline server::ServerSocket::ServerSocket() {
 		this->init();
 	}
 	bool server::ServerSocket::init(PCSTR port, INT backlog, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype) {
@@ -59,34 +59,71 @@ namespace server {
 		this->pAddrInfo = pAddrInfo;
 		return true;
 	}
-	server::ServerSocket::~ServerSocket() {
-		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
 
+	inline server::ServerSocket::~ServerSocket() {
+		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
 		freeaddrinfo(this->pAddrInfo);
 		closesocket(this->sock);
 	}
 
-	bool server::ServerSocket::send(CHAR* data, SIZE_T dwTypeSize) {
-		return true;
+	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags = 0) {
+		DWORD res = send(sock, pData, dwTypeSize, 0);
+		return res;
 	}
-	bool server::ServerSocket::recv() {
-		return true;
+
+	inline DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) {
+		DWORD res = recv(sock, pBuffer, dwBufferLen, flags);
+		return res;
 	}
-	SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL) {
+
+	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL) {
 		SOCKET clientSocket = accept(serverSocket, addr, addrLen);
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
 			WSACleanup();
-			return 0;
+			return server::SAD_NULL;
 		}
-
-		return clientSocket;
+		SocketAddrPair sadRes = SocketAddrPair(clientSocket, addr);
+		return sadRes;
 	}
 	// --------------------------------------- //
 
 	server::ServerNetworkManager::ServerNetworkManager() {
 
 	}
+
 	server::ServerNetworkManager::~ServerNetworkManager() {
+	}
+
+	DWORD WINAPI server::ServerNetworkManager::clientThreadEntrypoint(LPVOID params) {
+		// Convert LPVOID back to the instance pointer
+		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
+		//TODO: FIX PARAM PASSING
+		return instance->clientHandlerThreadFunc(NULL);
+	}
+
+	DWORD WINAPI server::ServerNetworkManager::acceptThreadFunc(LPVOID params) {
+		while (!this->killSNM) {
+			SocketAddrPair sadRes = this->serverSocket.acceptNewConnection(this->serverSocket.sock);
+			if (server::compareSocketAddrPair(sadRes, server::SAD_NULL))
+				continue;
+
+			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
+			if (hStopEvent == NULL) {
+				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
+			}
+			LPVOID lpParameter = NULL;
+
+			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
+			this->threadManager.createNewThread(this->serverSocket.sock, pctClient);
+		}
+		return 1;
+	}
+
+	DWORD WINAPI server::ServerNetworkManager::clientHandlerThreadFunc(LPVOID params) {
+		while (!this->killSNM) {
+
+		}
+		return 1;
 	}
 }

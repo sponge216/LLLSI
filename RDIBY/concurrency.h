@@ -35,6 +35,7 @@ namespace concurrency {
 			DWORD dwCreationFlags,
 			LPDWORD lpThreadId
 		);
+		ConThread(HANDLE hStopEvent, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter);
 		~ConThread();
 
 		UniqueHandle hThread;
@@ -62,7 +63,7 @@ namespace concurrency {
 		std::unordered_map<DWORD, pConThread> threadMap;
 		static constexpr auto TIMEOUT_INTERVAL = 1000;
 		static constexpr auto INITIAL_MAP_SIZE = 100;
-		
+
 	};
 }
 #endif //APP_CONCURRENCY_H
