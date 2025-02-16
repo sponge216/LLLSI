@@ -66,17 +66,17 @@ namespace server {
 		closesocket(this->sock);
 	}
 
-	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags = 0) {
-		DWORD res = send(sock, pData, dwTypeSize, 0);
+	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) {
+		DWORD res = send(sock, pData, dwTypeSize, flags);
 		return res;
 	}
 
-	inline DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) {
+	inline DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
 		DWORD res = recv(sock, pBuffer, dwBufferLen, flags);
 		return res;
 	}
 
-	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL) {
+	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr, int* addrLen) {
 		SOCKET clientSocket = accept(serverSocket, addr, addrLen);
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());

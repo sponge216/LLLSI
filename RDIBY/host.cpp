@@ -17,11 +17,12 @@ namespace host {
 	host::HostSocket::~HostSocket() {
 
 	}
-	bool host::HostSocket::send(CHAR* data, SIZE_T dwTypeSize) {
-		return true;
+	DWORD host::HostSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) {
+		return 1;
 	}
-	bool host::HostSocket::recv() {
-		return true;
+	DWORD host::HostSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+		return 1;
+
 	}
 	// --------------------------------------- //
 

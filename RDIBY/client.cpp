@@ -17,12 +17,12 @@ namespace client {
 	client::ClientSocket::~ClientSocket() {
 
 	}
-	bool client::ClientSocket::send(CHAR* data, SIZE_T dwTypeSize) {
-		return true;
+	DWORD client::ClientSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) {
+		return 1;
 	}
-	bool client::ClientSocket::recv() {
-		return true;
-	}
+	DWORD client::ClientSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+		return 1;
+	 }
 
 	// --------------------------------------- //
 

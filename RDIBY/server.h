@@ -24,8 +24,8 @@ namespace server {
 		~ServerSocket();
 
 		bool init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM);
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags = 0) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
+		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
+		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
 
 
@@ -46,8 +46,8 @@ namespace server {
 		bool killSNM = false;
 		ServerSocket serverSocket;
 		concurrency::ThreadManager threadManager;
-		LPTHREAD_START_ROUTINE(*pAcceptThreadFunc)(LPVOID params);
-		LPTHREAD_START_ROUTINE(*pClientHandlerThreadFunc)(LPVOID params);
+		/*LPTHREAD_START_ROUTINE(*pAcceptThreadFunc)(LPVOID params);
+		LPTHREAD_START_ROUTINE(*pClientHandlerThreadFunc)(LPVOID params);*/
 
 		DWORD WINAPI  acceptThreadFunc(LPVOID params);
 		DWORD WINAPI clientHandlerThreadFunc(LPVOID params);

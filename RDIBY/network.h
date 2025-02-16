@@ -15,8 +15,8 @@ namespace network {
 
 	public:
 		SOCKET sock; //TODO: FIX THESE ACCESS PERMISSIONS!!!
-		virtual DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags = 0) = 0;
-		virtual DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) = 0;
+		virtual DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) = 0;
+		virtual DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) = 0;
 
 	protected:
 		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
