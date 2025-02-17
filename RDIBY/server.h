@@ -9,7 +9,7 @@
 
 namespace server {
 	constexpr auto DEFAULT_BACKLOG = 20;
-	constexpr auto DEFAULT_PORT = "30527";
+	constexpr auto DEFAULT_PORT = "8080";
 
 	typedef std::pair<SOCKET, sockaddr*> SocketAddrPair;
 	constexpr SocketAddrPair SAD_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE

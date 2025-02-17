@@ -13,6 +13,7 @@ namespace server {
 		SOCKET serverSocket;
 		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
 		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
+		ZeroMemory(&hints, sizeof(hints));
 
 		hints.ai_family = ai_family; // set internet family.
 		hints.ai_socktype = ai_socktype; //set socket type. We use TCP so we set it to sock_stream.

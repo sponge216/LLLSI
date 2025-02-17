@@ -33,7 +33,6 @@ namespace host {
 
 	private:
 		HostSocket hostSocket;
-		static const WSADATA wsaData;
 
 	};
 }

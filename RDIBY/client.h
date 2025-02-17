@@ -31,7 +31,6 @@ namespace client {
 
 	private:
 		ClientSocket clientSocket;
-		static const WSADATA wsaData;
 
 	};
 }
