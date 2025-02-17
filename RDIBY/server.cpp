@@ -100,12 +100,14 @@ namespace server {
 		// Convert LPVOID back to the instance pointer
 		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
 		//TODO: FIX PARAM PASSING
-		return instance->clientHandlerThreadFunc(NULL);
+		return instance->clientHandlerThreadFunc(instance);
 	}
 
 	DWORD WINAPI server::ServerNetworkManager::acceptThreadFunc(LPVOID params) {
-		while (!this->killSNM) {
-			SocketAddrPair sadRes = this->serverSocket.acceptNewConnection(this->serverSocket.sock);
+		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
+
+		while (!instance->killSNM) {
+			SocketAddrPair sadRes = instance->serverSocket.acceptNewConnection(instance->serverSocket.sock);
 			if (server::compareSocketAddrPair(sadRes, server::SAD_NULL))
 				continue;
 
@@ -113,16 +115,36 @@ namespace server {
 			if (hStopEvent == NULL) {
 				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
 			}
-			LPVOID lpParameter = NULL;
+			LPVOID lpParameter = (LPVOID)instance;
 
 			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
-			this->threadManager.createNewThread(this->serverSocket.sock, pctClient);
+			instance->threadManager.createNewThread(instance->serverSocket.sock, pctClient);
 		}
 		return 1;
 	}
 
+	bool server::ServerNetworkManager::acceptFunc(server::ServerNetworkManager* pSnm) {
+
+		while (!pSnm->killSNM) {
+			SocketAddrPair sadRes = pSnm->serverSocket.acceptNewConnection(pSnm->serverSocket.sock);
+			if (server::compareSocketAddrPair(sadRes, server::SAD_NULL))
+				continue;
+
+			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
+			if (hStopEvent == NULL) {
+				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
+			}
+			LPVOID lpParameter = (LPVOID)pSnm;
+
+			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
+			pSnm->threadManager.createNewThread(pSnm->serverSocket.sock, pctClient);
+		}
+		return true;
+	}
+
 	DWORD WINAPI server::ServerNetworkManager::clientHandlerThreadFunc(LPVOID params) {
-		while (!this->killSNM) {
+		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
+		while (!instance->killSNM) {
 
 		}
 		return 1;

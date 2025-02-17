@@ -41,18 +41,23 @@ namespace server {
 		ServerNetworkManager();
 		~ServerNetworkManager();
 
-
-	private:
-		bool killSNM = false;
 		ServerSocket serverSocket;
 		concurrency::ThreadManager threadManager;
+
+		static DWORD WINAPI  acceptThreadFunc(LPVOID params);
+		static DWORD WINAPI clientHandlerThreadFunc(LPVOID params);
+		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
+		bool acceptFunc(ServerNetworkManager* pSnm);
+
+
+		//TODO: FIX ACCESS LEVELS!@!!!
+	private:
+		bool killSNM = false;
 		/*LPTHREAD_START_ROUTINE(*pAcceptThreadFunc)(LPVOID params);
 		LPTHREAD_START_ROUTINE(*pClientHandlerThreadFunc)(LPVOID params);*/
 
-		DWORD WINAPI  acceptThreadFunc(LPVOID params);
-		DWORD WINAPI clientHandlerThreadFunc(LPVOID params);
 
-		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
+
 
 	};
 }
