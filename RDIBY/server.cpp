@@ -94,6 +94,7 @@ namespace server {
 	}
 
 	server::ServerNetworkManager::~ServerNetworkManager() {
+		this->killSNM = true;
 	}
 
 	DWORD WINAPI server::ServerNetworkManager::clientThreadEntrypoint(LPVOID params) {
@@ -149,4 +150,38 @@ namespace server {
 		}
 		return 1;
 	}
+
+	// --------------------------------------- //
+
+	server::RoomManager::RoomManager() {
+
+	};
+
+	server::RoomManager::~RoomManager() {
+
+	};
+
+	bool server::RoomManager::CreateNewRoom(DWORD roomID, pRoom ptrRoom) {
+		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
+		return true;
+	};
+
+	bool server::RoomManager::DeleteRoom(DWORD roomID) {
+		this->roomMap.erase(roomID);
+		return true;
+	};
+
+	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
+		auto ptrRoom = this->roomMap[roomID];
+		//ptrRoom->pRoomVector.insert(pClient); // TODO: fix 
+
+	};
+
+	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
+		auto ptrRoom = this->roomMap[roomID];
+		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
+			//ptrRoom->pRoomVector.erase(); // TODO: fix
+		}
+	};
+
 }

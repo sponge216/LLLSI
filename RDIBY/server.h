@@ -69,10 +69,11 @@ namespace server {
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 
 	typedef struct room_t {
-		RoomClient rcClients[ROOM_SIZE];
-		RoomHost host;
+		std::vector<pRoomClient> pRoomVector;
+		pRoomHost host;
 		DWORD roomID;
-		char* roomPassword;
+		DWORD roomPassword;
+		DWORD dwCurrRoomSize;
 	} Room, * pRoom;
 
 	class RoomManager {
@@ -80,14 +81,14 @@ namespace server {
 		RoomManager();
 		~RoomManager();
 
-		bool CreateNewRoom(DWORD roomID, Room room);
+		bool CreateNewRoom(DWORD roomID, pRoom room);
 		bool DeleteRoom(DWORD roomID);
 
-		bool addClientToRoom(DWORD roomID, RoomClient);
+		bool addClientToRoom(DWORD roomID, pRoomClient client);
 		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
 
 	private:
-		std::unordered_map<DWORD, Room> roomMap; // ID -> room map
+		std::unordered_map<DWORD, pRoom> roomMap; // ID -> room map
 	};
 
 }

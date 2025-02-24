@@ -33,7 +33,7 @@ namespace concurrency {
 		}
 
 		ctThread->hThread = UniqueHandle(thread);
-		this->threadMap[key] = ctThread;
+		this->threadMap[key] = ctThread; // TODO: CHANGE TO INSERT,THIS SYNTAX IS INCORRECT.
 		return true;
 	}
 
