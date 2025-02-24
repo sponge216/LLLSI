@@ -10,6 +10,7 @@
 namespace server {
 	constexpr auto DEFAULT_BACKLOG = 20;
 	constexpr auto DEFAULT_PORT = "8080";
+	constexpr auto ROOM_SIZE = 20;
 
 	typedef std::pair<SOCKET, sockaddr*> SocketAddrPair;
 	constexpr SocketAddrPair SAD_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
@@ -60,5 +61,34 @@ namespace server {
 
 
 	};
+
+	// --------------------------------------- //
+	typedef struct roomClient_t {
+		SOCKET sock;
+		char* name;
+	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
+
+	typedef struct room_t {
+		RoomClient rcClients[ROOM_SIZE];
+		RoomHost host;
+		DWORD roomID;
+		char* roomPassword;
+	} Room, * pRoom;
+
+	class RoomManager {
+	public:
+		RoomManager();
+		~RoomManager();
+
+		bool CreateNewRoom(DWORD roomID, Room room);
+		bool DeleteRoom(DWORD roomID);
+
+		bool addClientToRoom(DWORD roomID, RoomClient);
+		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
+
+	private:
+		std::unordered_map<DWORD, Room> roomMap; // ID -> room map
+	};
+
 }
 #endif //APP_NETWORK_SERVER_H
