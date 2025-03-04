@@ -1,10 +1,13 @@
 #include "server.h"
+
 int test1(int testNum);
 int test2(int testNum);
+int test3(int testNum);
 
 int main(int argc, char** argv) {
-	test1(1);
-	test2(2);
+	//test1(1);
+	//test2(2);
+	test3(3);
 }
 
 // test to check if accept thread function works
@@ -30,6 +33,26 @@ int test2(int testNum) {
 
 	server::ServerNetworkManager* pSnm = new server::ServerNetworkManager();
 	pSnm->acceptFunc(pSnm);
+
+	return 1;
+}
+
+int test3(int testNum) {
+	std::cout << "IN TEST  " << testNum << "\n";
+
+	auto roomsSize = 10;
+
+	server::ServerNetworkManager* pSnm = new server::ServerNetworkManager();
+	server::RoomManager* pRm = new server::RoomManager;
+
+	for (int i = 0; i < roomsSize; i++) {
+		server::pRoom r = new server::Room();
+		pRm->createNewRoom(i, r);
+
+		for (int j = 0; j < roomsSize; j++) {
+			pRm->addClientToRoom(i, new server::RoomClient);
+		}
+	}
 
 	return 1;
 }

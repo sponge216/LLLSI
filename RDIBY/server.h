@@ -8,6 +8,7 @@
 #include <iostream>
 
 namespace server {
+
 	constexpr auto DEFAULT_BACKLOG = 20;
 	constexpr auto DEFAULT_PORT = "8080";
 	constexpr auto ROOM_SIZE = 20;
@@ -64,16 +65,20 @@ namespace server {
 
 	// --------------------------------------- //
 	typedef struct roomClient_t {
-		SOCKET sock;
-		char* name;
+		SOCKET sock = -1;
+		char* name = NULL;
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 
 	typedef struct room_t {
-		std::vector<pRoomClient> pRoomVector;
-		pRoomHost host;
-		DWORD roomID;
-		DWORD roomPassword;
-		DWORD dwCurrRoomSize;
+		std::vector<pRoomClient>* pRoomVector;
+		pRoomHost host = NULL;
+		DWORD roomID = 0;
+		DWORD roomPassword = 0;
+		DWORD dwCurrRoomSize = 0;
+
+		room_t() :pRoomVector(new std::vector<pRoomClient>), host(NULL), roomID(0), roomPassword(0), dwCurrRoomSize(0) {
+
+		}
 	} Room, * pRoom;
 
 	class RoomManager {
@@ -81,14 +86,14 @@ namespace server {
 		RoomManager();
 		~RoomManager();
 
-		bool createNewRoom(DWORD roomID, pRoom room);
-		bool deleteRoom(DWORD roomID);
+		inline bool createNewRoom(DWORD roomID, pRoom room);
+		inline bool deleteRoom(DWORD roomID);
 
-		bool addClientToRoom(DWORD roomID, pRoomClient client);
-		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
+		inline bool addClientToRoom(DWORD roomID, pRoomClient pClient);
+		inline bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
 
 	private:
-		std::unordered_map<DWORD, pRoom> roomMap; // ID -> room map
+		std::unordered_map<DWORD, pRoom>* pRoomMap; // ID -> room map
 	};
 
 }

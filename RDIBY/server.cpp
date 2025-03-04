@@ -154,7 +154,7 @@ namespace server {
 	// --------------------------------------- //
 
 	server::RoomManager::RoomManager() {
-
+		this->pRoomMap = new std::unordered_map<DWORD, pRoom>;
 	};
 
 	server::RoomManager::~RoomManager() {
@@ -162,31 +162,35 @@ namespace server {
 	};
 
 	inline bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
-		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
+		this->pRoomMap->insert(std::make_pair(roomID, ptrRoom));
 
 		return true;
 	};
 
 	inline bool server::RoomManager::deleteRoom(DWORD roomID) {
-		this->roomMap.erase(roomID);
+		this->pRoomMap->erase(roomID);
 
 		return true;
 	};
 
 	inline bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
-		auto ptrRoom = this->roomMap[roomID];
-		ptrRoom->pRoomVector.push_back(pClient);
+		auto ptrRoom = (*this->pRoomMap)[roomID];
+		ptrRoom->pRoomVector->push_back(pClient);
+
+		std::cout << "Added client " << pClient->sock << "to room " << roomID;
 
 		return true;
 	};
 
 	inline bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
-		auto ptrRoom = this->roomMap[roomID];
-		auto roomVector = ptrRoom->pRoomVector;
+		auto ptrRoom = (*this->pRoomMap)[roomID];
+		auto pRoomVector = *ptrRoom->pRoomVector;
+
 		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
-			if (roomVector[i]->sock == clientSock)
-				roomVector.erase(roomVector.begin() + i);
+			if (pRoomVector[i]->sock == clientSock)
+				pRoomVector.erase(pRoomVector.begin() + i);
 		}
+		std::cout << "removed client " << clientSock << "from room " << roomID;
 
 		return true;
 	};
