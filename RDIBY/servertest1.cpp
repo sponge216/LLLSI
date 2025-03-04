@@ -50,9 +50,19 @@ int test3(int testNum) {
 		pRm->createNewRoom(i, r);
 
 		for (int j = 0; j < roomsSize; j++) {
-			pRm->addClientToRoom(i, new server::RoomClient);
+			auto p = new server::RoomClient;
+			p->sock = j;
+			pRm->addClientToRoom(i, p);
 		}
 	}
 
+	for (int i = 0; i < roomsSize; i++) {
+
+		for (int j = 0; j < roomsSize; j++) {
+			pRm->removeClientFromRoom(i, j);
+		}
+		pRm->deleteRoom(i);
+	}
+	pRm->~RoomManager();
 	return 1;
 }

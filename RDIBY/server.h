@@ -86,11 +86,11 @@ namespace server {
 		RoomManager();
 		~RoomManager();
 
-		inline bool createNewRoom(DWORD roomID, pRoom room);
-		inline bool deleteRoom(DWORD roomID);
+		bool createNewRoom(DWORD roomID, pRoom room);
+		bool deleteRoom(DWORD roomID);
 
-		inline bool addClientToRoom(DWORD roomID, pRoomClient pClient);
-		inline bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
+		bool addClientToRoom(DWORD roomID, pRoomClient pClient);
+		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
 
 	private:
 		std::unordered_map<DWORD, pRoom>* pRoomMap; // ID -> room map

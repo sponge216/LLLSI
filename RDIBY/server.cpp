@@ -161,19 +161,19 @@ namespace server {
 
 	};
 
-	inline bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
+	bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
 		this->pRoomMap->insert(std::make_pair(roomID, ptrRoom));
 
 		return true;
 	};
 
-	inline bool server::RoomManager::deleteRoom(DWORD roomID) {
+	bool server::RoomManager::deleteRoom(DWORD roomID) {
 		this->pRoomMap->erase(roomID);
 
 		return true;
 	};
 
-	inline bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
+	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
 		auto ptrRoom = (*this->pRoomMap)[roomID];
 		ptrRoom->pRoomVector->push_back(pClient);
 
@@ -182,7 +182,7 @@ namespace server {
 		return true;
 	};
 
-	inline bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
+	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
 		auto ptrRoom = (*this->pRoomMap)[roomID];
 		auto pRoomVector = *ptrRoom->pRoomVector;
 

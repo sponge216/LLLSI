@@ -1,6 +1,3 @@
-#define WIN32_LEAN_AND_MEAN
-#define _AMD64_
-
 
 #include "network.h"
 #include "concurrency.h"
