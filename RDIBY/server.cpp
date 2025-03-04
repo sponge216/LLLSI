@@ -161,27 +161,34 @@ namespace server {
 
 	};
 
-	bool server::RoomManager::CreateNewRoom(DWORD roomID, pRoom ptrRoom) {
+	inline bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
 		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
+
 		return true;
 	};
 
-	bool server::RoomManager::DeleteRoom(DWORD roomID) {
+	inline bool server::RoomManager::deleteRoom(DWORD roomID) {
 		this->roomMap.erase(roomID);
+
 		return true;
 	};
 
-	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
+	inline bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
 		auto ptrRoom = this->roomMap[roomID];
-		//ptrRoom->pRoomVector.insert(pClient); // TODO: fix 
+		ptrRoom->pRoomVector.push_back(pClient);
 
+		return true;
 	};
 
-	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
+	inline bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
 		auto ptrRoom = this->roomMap[roomID];
+		auto roomVector = ptrRoom->pRoomVector;
 		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
-			//ptrRoom->pRoomVector.erase(); // TODO: fix
+			if (roomVector[i]->sock == clientSock)
+				roomVector.erase(roomVector.begin() + i);
 		}
+
+		return true;
 	};
 
 }

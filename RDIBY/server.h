@@ -81,8 +81,8 @@ namespace server {
 		RoomManager();
 		~RoomManager();
 
-		bool CreateNewRoom(DWORD roomID, pRoom room);
-		bool DeleteRoom(DWORD roomID);
+		bool createNewRoom(DWORD roomID, pRoom room);
+		bool deleteRoom(DWORD roomID);
 
 		bool addClientToRoom(DWORD roomID, pRoomClient client);
 		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
