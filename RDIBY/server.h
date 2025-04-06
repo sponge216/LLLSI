@@ -14,7 +14,7 @@ namespace server {
 	constexpr auto ROOM_SIZE = 20;
 
 	typedef std::pair<SOCKET, sockaddr*> SocketAddrPair;
-	constexpr SocketAddrPair SAD_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
+	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
 
 	inline bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
 		return a.first == b.first && a.second == b.second;
@@ -24,7 +24,13 @@ namespace server {
 		char* roomName;
 		char* userName;
 		char* password;
+		bool isHost;
 	}interaction_data_t, * pinteraction_data;
+
+	typedef struct {
+		ServerNetworkManager* pSnm;
+		SocketAddrPair sap;
+	}thread_data_t, * pthread_data_t;
 
 	class ServerSocket : public network::BaseSocket {
 	public:
@@ -32,8 +38,8 @@ namespace server {
 		~ServerSocket();
 
 		bool init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM);
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
 
 
@@ -49,15 +55,17 @@ namespace server {
 		ServerNetworkManager();
 		~ServerNetworkManager();
 
-		ServerSocket serverSocket;
+		EncryptedServerSocket eServerSocket;
+
 		concurrency::ThreadManager threadManager;
+		RoomManager roomManager;
 
 		static DWORD WINAPI  acceptThreadFunc(LPVOID params);
 		static DWORD WINAPI clientHandlerThreadFunc(LPVOID params);
 		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
 		bool acceptFunc(ServerNetworkManager* pSnm);
 
-		interaction_data_t firstClientInteraction();
+		interaction_data_t firstClientInteraction(SocketAddrPair sap);
 
 
 
@@ -71,6 +79,22 @@ namespace server {
 
 
 	};
+	// --------------------------------------- //
+	class EncryptedServerSocket : public ServerSocket {
+	public:
+		EncryptedServerSocket();
+		~EncryptedServerSocket();
+
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
+		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
+		DWORD firstEncryptionInteraction(SocketAddrPair sap);
+		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
+	private:
+		ServerSocket serverSocket;
+
+	};
+
 
 	// --------------------------------------- //
 	typedef struct roomClient_t {

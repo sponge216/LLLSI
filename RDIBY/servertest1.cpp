@@ -22,7 +22,7 @@ int test1(int testNum) {
 	LPVOID lpParameter = (LPVOID)pSnm;
 
 	concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, pSnm->acceptThreadFunc, lpParameter);
-	pSnm->threadManager.createNewThread(pSnm->serverSocket.sock, pctClient);
+	pSnm->threadManager.createNewThread(pSnm->eServerSocket.sock, pctClient);
 
 	return 1;
 }

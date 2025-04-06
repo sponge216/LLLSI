@@ -82,7 +82,7 @@ namespace server {
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
 			WSACleanup();
-			return server::SAD_NULL;
+			return server::SAP_NULL;
 		}
 		SocketAddrPair sadRes = SocketAddrPair(clientSocket, addr);
 		return sadRes;
@@ -98,18 +98,19 @@ namespace server {
 	}
 
 	DWORD WINAPI server::ServerNetworkManager::clientThreadEntrypoint(LPVOID params) {
+		pthread_data_t ptData = static_cast<pthread_data_t>(params);
 		// Convert LPVOID back to the instance pointer
-		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
+		ServerNetworkManager* instance = ptData->pSnm;
 		//TODO: FIX PARAM PASSING
-		return instance->clientHandlerThreadFunc(instance);
+		return instance->clientHandlerThreadFunc(params);
 	}
 
 	DWORD WINAPI server::ServerNetworkManager::acceptThreadFunc(LPVOID params) {
 		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
 
 		while (!instance->killSNM) {
-			SocketAddrPair sadRes = instance->serverSocket.acceptNewConnection(instance->serverSocket.sock);
-			if (server::compareSocketAddrPair(sadRes, server::SAD_NULL))
+			SocketAddrPair sadRes = instance->eServerSocket.acceptNewConnection(instance->eServerSocket.sock);
+			if (server::compareSocketAddrPair(sadRes, server::SAP_NULL))
 				continue;
 
 			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
@@ -119,7 +120,7 @@ namespace server {
 			LPVOID lpParameter = (LPVOID)instance;
 
 			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
-			instance->threadManager.createNewThread(instance->serverSocket.sock, pctClient);
+			instance->threadManager.createNewThread(instance->eServerSocket.sock, pctClient);
 		}
 		return 1;
 	}
@@ -127,35 +128,71 @@ namespace server {
 	bool server::ServerNetworkManager::acceptFunc(server::ServerNetworkManager* pSnm) {
 
 		while (!pSnm->killSNM) {
-			SocketAddrPair sadRes = pSnm->serverSocket.acceptNewConnection(pSnm->serverSocket.sock);
-			if (server::compareSocketAddrPair(sadRes, server::SAD_NULL))
+			SocketAddrPair sapRes = pSnm->eServerSocket.acceptNewConnection(pSnm->eServerSocket.sock);
+			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
+
+			DWORD res = pSnm->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
+			if (!res) {
+				//TODO: kill interaction successfuly.
+			}
 
 			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
 			if (hStopEvent == NULL) {
 				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
 			}
-			LPVOID lpParameter = (LPVOID)pSnm;
+
+			thread_data_t tData = { pSnm, sapRes };
+			LPVOID lpParameter = LPVOID(&tData);
 
 			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
-			pSnm->threadManager.createNewThread(pSnm->serverSocket.sock, pctClient);
+			pSnm->threadManager.createNewThread(sapRes.first, pctClient);
 		}
 		return true;
 	}
 
+	// the thread function that handles the client. 
+	// it uses the first interaction function to get essential data from the client.
 	DWORD WINAPI server::ServerNetworkManager::clientHandlerThreadFunc(LPVOID params) {
-		ServerNetworkManager* pSnm = static_cast<ServerNetworkManager*>(params);
-		interaction_data_t res = pSnm->firstClientInteraction(); // first client interaction, first exchange protocol.
+		pthread_data_t ptData = static_cast<pthread_data_t>(params);
+		ServerNetworkManager* pSnm = ptData->pSnm;
+		SocketAddrPair sap = ptData->sap;
+		interaction_data_t res = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 
+		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
+		DWORD roomPassword = 0; // TODO: hash res.password;
 
-		while (!pSnm->killSNM) {
+		if (res.isHost) {
 
+			RoomHost roomHost = { pSnm->eServerSocket.sock,res.userName };
+
+			pRoom proom = new Room();
+			proom->dwCurrRoomSize++;
+			proom->host = &roomHost;
+			proom->roomID = roomID;
+			proom->roomPassword = roomPassword;
+
+			pSnm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
 		}
+		else {
+			RoomClient roomClient = { sap.first,res.userName };
+			pRoomClient prc = &roomClient; // pointer to the new room client
+			bool cRes = pSnm->roomManager.addClientToRoom(roomID, prc);
+			if (!cRes) {
+				//TODO: kill interaction
+			}
+		}
+
+		// TODO: add a while loop that checks for additional messages.
+		// Such as: start room ,leave room, etc.
+
 		return 1;
 	}
 
-	interaction_data_t server::ServerNetworkManager::firstClientInteraction() {
+	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
 		interaction_data_t idData = { 0 };
+
+		return idData;
 	}
 
 	// --------------------------------------- //
