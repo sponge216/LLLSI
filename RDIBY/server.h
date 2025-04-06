@@ -20,6 +20,12 @@ namespace server {
 		return a.first == b.first && a.second == b.second;
 	}
 
+	typedef struct {
+		char* roomName;
+		char* userName;
+		char* password;
+	}interaction_data_t, * pinteraction_data;
+
 	class ServerSocket : public network::BaseSocket {
 	public:
 		ServerSocket();
@@ -51,7 +57,7 @@ namespace server {
 		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
 		bool acceptFunc(ServerNetworkManager* pSnm);
 
-		DWORD firstClientInteraction();
+		interaction_data_t firstClientInteraction();
 
 
 
