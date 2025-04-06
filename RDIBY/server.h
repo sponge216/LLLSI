@@ -51,6 +51,9 @@ namespace server {
 		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
 		bool acceptFunc(ServerNetworkManager* pSnm);
 
+		DWORD firstClientInteraction();
+
+
 
 		//TODO: FIX ACCESS LEVELS!@!!!
 	private:

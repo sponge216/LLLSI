@@ -5,6 +5,10 @@ namespace events {
 
 	}
 
+	events::KeyboardEventManager::~KeyboardEventManager() {
+
+	}
+
 	LRESULT __stdcall events::KeyboardEventManager::KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (nCode >= 0)
 		{
@@ -57,6 +61,9 @@ namespace events {
 
 events::MouseEventManager::MouseEventManager() {
 
+}
+
+events::MouseEventManager::~MouseEventManager() {
 }
 
 LRESULT __stdcall events::MouseEventManager::MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam) {

@@ -144,8 +144,11 @@ namespace server {
 	}
 
 	DWORD WINAPI server::ServerNetworkManager::clientHandlerThreadFunc(LPVOID params) {
-		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
-		while (!instance->killSNM) {
+		ServerNetworkManager* pSnm = static_cast<ServerNetworkManager*>(params);
+		DWORD res = pSnm->firstClientInteraction(); // first client interaction, first exchange protocol.
+
+
+		while (!pSnm->killSNM) {
 
 		}
 		return 1;
