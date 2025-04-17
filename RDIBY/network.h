@@ -10,12 +10,15 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 namespace network {
-	
+
+	WSADATA wsaData;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
 	class BaseSocket {
 
 	public:
 		SOCKET sock; //TODO: FIX THESE ACCESS PERMISSIONS!!!
-		virtual DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) = 0;
+		virtual DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) = 0;
 		virtual DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) = 0;
 
 	protected:

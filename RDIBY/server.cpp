@@ -5,11 +5,19 @@ namespace server {
 	inline server::ServerSocket::ServerSocket() {
 		this->init();
 	}
-	bool server::ServerSocket::init(PCSTR port, INT backlog, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype) {
+
+	inline server::ServerSocket::~ServerSocket() {
+		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
+		freeaddrinfo(this->pAddrInfo);
+		closesocket(this->sock);
+	}
+
+	bool server::ServerSocket::init(PCSTR port, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype) {
 		if (this->pAddrInfo != NULL) {
 			this->hints = { 0 };
 			this->pAddrInfo = NULL;
 		}
+
 		SOCKET serverSocket;
 		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
 		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
@@ -51,30 +59,31 @@ namespace server {
 		}
 
 		printf("Server Socket initiated!\n");
-		if (listen(serverSocket, backlog) < 0) {
-			fprintf(stdout, "Listen failed on Server Socket with error: %ld\n", WSAGetLastError());
-			return false;
-		}
 
+		this->sock = serverSocket;
 		this->hints = hints;
 		this->pAddrInfo = pAddrInfo;
 		return true;
 	}
 
-	inline server::ServerSocket::~ServerSocket() {
-		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
-		freeaddrinfo(this->pAddrInfo);
-		closesocket(this->sock);
+	bool server::ServerSocket::initListen(DWORD backlog) {
+		if (listen(this->sock, backlog) < 0) {
+			fprintf(stdout, "Listen failed on Server Socket with error: %ld\n", WSAGetLastError());
+			return false;
+		}
 	}
 
-	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) {
-		DWORD res = send(sock, pData, dwTypeSize, flags);
+	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
+		DWORD dwMsgLen = dwTypeSize * dwLen;
+		if (dwMsgLen <= 0) return -1;
+
+		DWORD res = send(sock, pData, dwMsgLen, flags);
 		return res;
 	}
 
 	inline DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
-		DWORD res = recv(sock, pBuffer, dwBufferLen, flags);
-		return res;
+		return recv(sock, pBuffer, dwBufferLen, flags);
+
 	}
 
 	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr, int* addrLen) {
@@ -183,8 +192,13 @@ namespace server {
 			}
 		}
 
+		bool on = true;
+		while (on) {
+
+		}
 		// TODO: add a while loop that checks for additional messages.
 		// Such as: start room ,leave room, etc.
+		// dont forget, when client leaves room kill their connection!
 
 		return 1;
 	}

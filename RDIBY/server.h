@@ -6,6 +6,7 @@
 #include "network.h"
 #include "concurrency.h"
 #include <iostream>
+#include "IActionMediator.h"
 
 namespace server {
 
@@ -37,26 +38,53 @@ namespace server {
 		ServerSocket();
 		~ServerSocket();
 
-		bool init(PCSTR port = DEFAULT_PORT, INT backlog = DEFAULT_BACKLOG, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM);
-		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
+		bool init(PCSTR port = DEFAULT_PORT, INT ai_family = AF_INET, INT ai_flags = AI_PASSIVE, INT ai_protocol = IPPROTO_TCP, INT ai_socktype = SOCK_STREAM);
+		bool initListen(DWORD backlog = DEFAULT_BACKLOG);
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
 
 
 	private:
-		std::vector<SocketAddrPair> sadVector;
+		std::vector<SocketAddrPair> sapVector;
 	};
 
 
 	// --------------------------------------- //
 
-	class ServerNetworkManager {
+	class EncryptedServerSocket : public ServerSocket {
+	public:
+		EncryptedServerSocket();
+		~EncryptedServerSocket();
+
+		bool initListen(DWORD backlog = DEFAULT_BACKLOG);
+
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
+		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
+		DWORD firstEncryptionInteraction(SocketAddrPair sap);
+		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
+	private:
+		ServerSocket serverSocket;
+
+	};
+
+	// --------------------------------------- //
+	// TODO: FIX NESTING LEVELS OF ROOM MANAGER!
+	class ServerManager {
+	public:
+		ServerNetworkManager serverNetworkManager;
+		RoomManager roomManager;
+	};
+
+	// --------------------------------------- //
+
+	class ServerNetworkManager : IActionListener {
 	public:
 		ServerNetworkManager();
 		~ServerNetworkManager();
 
 		EncryptedServerSocket eServerSocket;
-
 		concurrency::ThreadManager threadManager;
 		RoomManager roomManager;
 
@@ -79,24 +107,9 @@ namespace server {
 
 
 	};
-	// --------------------------------------- //
-	class EncryptedServerSocket : public ServerSocket {
-	public:
-		EncryptedServerSocket();
-		~EncryptedServerSocket();
-
-		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags) override;
-		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
-		DWORD firstEncryptionInteraction(SocketAddrPair sap);
-		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
-	private:
-		ServerSocket serverSocket;
-
-	};
-
 
 	// --------------------------------------- //
+
 	typedef struct roomClient_t {
 		SOCKET sock = -1;
 		char* name = NULL;
@@ -114,7 +127,7 @@ namespace server {
 		}
 	} Room, * pRoom;
 
-	class RoomManager {
+	class RoomManager : IActionListener {
 	public:
 		RoomManager();
 		~RoomManager();
@@ -125,9 +138,25 @@ namespace server {
 		bool addClientToRoom(DWORD roomID, pRoomClient pClient);
 		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
 
+
 	private:
 		std::unordered_map<DWORD, pRoom>* pRoomMap; // ID -> room map
 	};
 
+	class RoomMessageParser {
+	public:
+		RoomMessageParser();
+		~RoomMessageParser();
+
+		auto static const ENTRY_MSG = 0; // when client first enters
+		auto static const LEAVE_MSG = 1; // when client leaves
+		auto static const CLOSE_ROOM_MSG = 2; // when host closes room without starting it
+		auto static const START_PUNCH_MSG = 3; // when host closes room and wants to start nat hole punching
+	};
+
+	class ServerMediator : Mediator {
+
+
+	};
 }
 #endif //APP_NETWORK_SERVER_H

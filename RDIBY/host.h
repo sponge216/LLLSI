@@ -14,14 +14,29 @@ namespace host {
 	public:
 		HostSocket();
 		~HostSocket();
-		bool initTCP();
-		bool initUDP();
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD flags = 0) override;
+		bool initTCP(PCSTR pAddrStr, DWORD port);
+		bool initUDP(PCSTR pAddrStr, PCSTR port);
+		bool initListen(DWORD backlog);
+		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
 		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
 	};
 
 	// --------------------------------------- //
+	class EncryptedHostSocket :
+		public network::BaseSocket
+	{
 
+	public:
+		EncryptedHostSocket();
+		~EncryptedHostSocket();
+		bool initTCP(PCSTR pAddrStr, DWORD port);
+		bool initUDP(PCSTR pAddrStr, PCSTR port);
+		bool initListen(DWORD backlog);
+
+		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
+		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
+		DWORD firstInteraction();
+	};
 	/// <summary>
 		/// 
 		/// </summary>
@@ -32,7 +47,7 @@ namespace host {
 		~HostNetworkManager();
 
 	private:
-		HostSocket hostSocket;
+		EncryptedHostSocket hostSocket;
 
 	};
 }
