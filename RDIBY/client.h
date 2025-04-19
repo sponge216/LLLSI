@@ -30,11 +30,15 @@ namespace client {
 	public:
 		EncryptedClientSocket();
 		~EncryptedClientSocket();
+
 		bool initTCP();
 		bool initUDP();
+
 		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		DWORD firstInteraction();
+
+		DWORD firstServerInteraction();
+		DWORD firstHostInteraction();
 
 	};
 

@@ -88,4 +88,77 @@ namespace concurrency {
 	concurrency::ConThread::~ConThread() {
 		fprintf(stdout, "ConThread  deconstructed");
 	}
+
+	// -------------------------------------------------
+
+	concurrency::CriticalSection::CriticalSection() {
+		this->cs = { 0 };
+		this->init();
+
+	}
+	concurrency::CriticalSection::~CriticalSection() {
+		this->del();
+
+	}
+	void concurrency::CriticalSection::init() {
+		InitializeCriticalSection(&this->cs);
+
+	}
+	void concurrency::CriticalSection::enter() {
+		EnterCriticalSection(&this->cs);
+
+	}
+	DWORD concurrency::CriticalSection::tryEntry() {
+		return TryEnterCriticalSection(&this->cs);
+
+	}
+	void concurrency::CriticalSection::release() {
+		LeaveCriticalSection(&this->cs);
+
+	}
+	void concurrency::CriticalSection::del() {
+		DeleteCriticalSection(&this->cs);
+
+	}
+	PCRITICAL_SECTION concurrency::CriticalSection::getCSPointer() {
+		return &this->cs;
+
+	}
+
+	// -------------------------------------------------
+
+	concurrency::ConditionVariable::ConditionVariable() {
+		this->cv = { 0 };
+		this->init();
+
+	}
+	concurrency::ConditionVariable::~ConditionVariable() {
+		this->del();
+
+	}
+	void concurrency::ConditionVariable::init() {
+		InitializeConditionVariable(&this->cv);
+
+	}
+	void concurrency::ConditionVariable::wake() {
+		WakeConditionVariable(&this->cv);
+
+	}
+	void concurrency::ConditionVariable::wakeAll() {
+		WakeAllConditionVariable(&this->cv);
+
+	}
+	void concurrency::ConditionVariable::sleep() {
+		this->cs.enter();
+		SleepConditionVariableCS(&this->cv, this->cs.getCSPointer(), this->timeout);
+		this->cs.release();
+
+	}
+	void concurrency::ConditionVariable::setTimeout(DWORD timeout) {
+		this->timeout = timeout;
+
+	}
+	void concurrency::ConditionVariable::del() {
+
+	}
 }

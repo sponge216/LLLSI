@@ -12,6 +12,37 @@
 
 namespace concurrency {
 
+	class CriticalSection {
+	public:
+		CriticalSection();
+		~CriticalSection();
+		void init();
+		void enter();
+		DWORD tryEntry();
+		void release();
+		void del();
+
+		PCRITICAL_SECTION getCSPointer();
+
+	private:
+		CRITICAL_SECTION cs;
+	};
+
+	class ConditionVariable {
+	public:
+		ConditionVariable();
+		~ConditionVariable();
+		void init();
+		void wake();
+		void wakeAll();
+		void sleep();
+		void del();
+		void setTimeout(DWORD timeout);
+	private:
+		CONDITION_VARIABLE cv;
+		CriticalSection cs;
+		DWORD timeout;
+	};
 	struct HandleDeleter {
 		void operator()(HANDLE h) const {
 			if (h && h != INVALID_HANDLE_VALUE) {
