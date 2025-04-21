@@ -3,10 +3,13 @@
 #ifndef APP_NETWORK_SERVER_H
 #define APP_NETWORK_SERVER_H
 
+#define MAX_MSG_SIZE 1024
+
 #include "network.h"
 #include "concurrency.h"
 #include <iostream>
 #include "IActionMediator.h"
+
 
 namespace server {
 
@@ -29,8 +32,8 @@ namespace server {
 	}interaction_data_t, * pinteraction_data;
 
 	typedef struct {
-		ServerNetworkManager* pSnm;
 		SocketAddrPair sap;
+		LPVOID params;
 	}thread_data_t, * pthread_data_t;
 
 	class ServerSocket : public network::BaseSocket {
@@ -61,20 +64,29 @@ namespace server {
 
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
+		SocketAddrPair acceptNewConnection(sockaddr* addr = NULL, int* addrLen = NULL);
 		DWORD firstEncryptionInteraction(SocketAddrPair sap);
 		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
 	private:
 		ServerSocket serverSocket;
+	};
+
+	// --------------------------------------- //
+
+	class ServerMediator : Mediator {
+
 
 	};
 
 	// --------------------------------------- //
+
 	// TODO: FIX NESTING LEVELS OF ROOM MANAGER!
 	class ServerManager {
 	public:
-		ServerNetworkManager serverNetworkManager;
+		ServerNetworkManager snManager;
 		RoomManager roomManager;
+		concurrency::ThreadManager threadManager;
+
 	};
 
 	// --------------------------------------- //
@@ -84,28 +96,17 @@ namespace server {
 		ServerNetworkManager();
 		~ServerNetworkManager();
 
+		void requestAction(Action action) override;
+		void executeAction(Action action) override;
+
 		EncryptedServerSocket eServerSocket;
 		concurrency::ThreadManager threadManager;
-		RoomManager roomManager;
 
-		static DWORD WINAPI  acceptThreadFunc(LPVOID params);
-		static DWORD WINAPI clientHandlerThreadFunc(LPVOID params);
-		static DWORD WINAPI clientThreadEntrypoint(LPVOID params);
-		bool acceptFunc(ServerNetworkManager* pSnm);
-
+		bool acceptFunc(DWORD WINAPI clientHandlerFunc(LPVOID params), LPVOID params);
 		interaction_data_t firstClientInteraction(SocketAddrPair sap);
-
-
-
 		//TODO: FIX ACCESS LEVELS!@!!!
 	private:
 		bool killSNM = false;
-		/*LPTHREAD_START_ROUTINE(*pAcceptThreadFunc)(LPVOID params);
-		LPTHREAD_START_ROUTINE(*pClientHandlerThreadFunc)(LPVOID params);*/
-
-
-
-
 	};
 
 	// --------------------------------------- //
@@ -132,21 +133,24 @@ namespace server {
 		RoomManager();
 		~RoomManager();
 
+		void requestAction(Action action) override;
+		void executeAction(Action action) override;
+
 		bool createNewRoom(DWORD roomID, pRoom room);
 		bool deleteRoom(DWORD roomID);
 
 		bool addClientToRoom(DWORD roomID, pRoomClient pClient);
 		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
-
-
 	private:
-		std::unordered_map<DWORD, pRoom>* pRoomMap; // ID -> room map
+		std::unordered_map<DWORD, pRoom> roomMap; // ID -> room map
 	};
 
 	class RoomMessageParser {
 	public:
 		RoomMessageParser();
 		~RoomMessageParser();
+		RoomMessage parseMessage(CHAR* pBuffer);
+
 
 		auto static const ENTRY_MSG = 0; // when client first enters
 		auto static const LEAVE_MSG = 1; // when client leaves
@@ -154,9 +158,14 @@ namespace server {
 		auto static const START_PUNCH_MSG = 3; // when host closes room and wants to start nat hole punching
 	};
 
-	class ServerMediator : Mediator {
-
-
+	class RoomMessage {
+	public:
+		DWORD msgType;
+		CHAR* clientName;
+		CHAR* password;
 	};
+
+	// --------------------------------------- //
+
 }
 #endif //APP_NETWORK_SERVER_H

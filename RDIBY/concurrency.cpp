@@ -33,7 +33,7 @@ namespace concurrency {
 		}
 
 		ctThread->hThread = UniqueHandle(thread);
-		this->threadMap[key] = ctThread; // TODO: CHANGE TO INSERT,THIS SYNTAX IS INCORRECT.
+		this->threadMap.insert(std::pair<DWORD, pConThread>(key, ctThread));
 		return true;
 	}
 
@@ -48,7 +48,15 @@ namespace concurrency {
 		this->threadMap.erase(key); //TODO: check if successful!!
 		return true;
 	}
+	/// <summary>
+	/// creates a new event.
+	/// </summary>
+	/// <returns>NULL - creation failed, use GetLastError() to know why.</returns>
+	HANDLE concurrency::ThreadManager::createNewEvent() {
+		HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
 
+		return hStopEvent;
+	}
 	// -------------------------------------------------
 
 	concurrency::ConThread::ConThread() {

@@ -2,11 +2,11 @@
 
 namespace server {
 
-	inline server::ServerSocket::ServerSocket() {
+	server::ServerSocket::ServerSocket() {
 		this->init();
 	}
 
-	inline server::ServerSocket::~ServerSocket() {
+	server::ServerSocket::~ServerSocket() {
 		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
 		freeaddrinfo(this->pAddrInfo);
 		closesocket(this->sock);
@@ -73,7 +73,7 @@ namespace server {
 		}
 	}
 
-	inline DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
+	DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
 		DWORD dwMsgLen = dwTypeSize * dwLen;
 		if (dwMsgLen <= 0) return -1;
 
@@ -81,12 +81,22 @@ namespace server {
 		return res;
 	}
 
-	inline DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+	DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
 		return recv(sock, pBuffer, dwBufferLen, flags);
 
 	}
-
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="serverSocket">server's socket</param>
+	/// <param name="addr">address struct buffer for holding addr info. Default value is NULL</param>
+	/// <param name="addrLen">length of addr. Default value is NULL</param>
+	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
 	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr, int* addrLen) {
+		sockaddr tempAddr = { 0 };
+		if (addr == NULL)
+			addr = &tempAddr;
+
 		SOCKET clientSocket = accept(serverSocket, addr, addrLen);
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
@@ -96,6 +106,7 @@ namespace server {
 		SocketAddrPair sadRes = SocketAddrPair(clientSocket, addr);
 		return sadRes;
 	}
+
 	// --------------------------------------- //
 
 	server::ServerNetworkManager::ServerNetworkManager() {
@@ -104,75 +115,51 @@ namespace server {
 
 	server::ServerNetworkManager::~ServerNetworkManager() {
 		this->killSNM = true;
+		this->threadManager.~ThreadManager();
 	}
 
-	DWORD WINAPI server::ServerNetworkManager::clientThreadEntrypoint(LPVOID params) {
-		pthread_data_t ptData = static_cast<pthread_data_t>(params);
-		// Convert LPVOID back to the instance pointer
-		ServerNetworkManager* instance = ptData->pSnm;
-		//TODO: FIX PARAM PASSING
-		return instance->clientHandlerThreadFunc(params);
-	}
-
-	DWORD WINAPI server::ServerNetworkManager::acceptThreadFunc(LPVOID params) {
-		ServerNetworkManager* instance = static_cast<ServerNetworkManager*>(params);
-
-		while (!instance->killSNM) {
-			SocketAddrPair sadRes = instance->eServerSocket.acceptNewConnection(instance->eServerSocket.sock);
-			if (server::compareSocketAddrPair(sadRes, server::SAP_NULL))
-				continue;
-
-			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
-			if (hStopEvent == NULL) {
-				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
-			}
-			LPVOID lpParameter = (LPVOID)instance;
-
-			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
-			instance->threadManager.createNewThread(instance->eServerSocket.sock, pctClient);
-		}
-		return 1;
-	}
-
-	bool server::ServerNetworkManager::acceptFunc(server::ServerNetworkManager* pSnm) {
-
-		while (!pSnm->killSNM) {
-			SocketAddrPair sapRes = pSnm->eServerSocket.acceptNewConnection(pSnm->eServerSocket.sock);
+	/// <summary>
+	/// server's response to an incoming client connection.
+	/// </summary>
+	/// <param name="clientHandlerFunc">- function that handles the new client</param>
+	/// <param name="params">- parameters that need to be passed to clientHandlerFunc</param>
+	/// <returns></returns>
+	bool server::ServerNetworkManager::acceptFunc(DWORD WINAPI clientHandlerFunc(LPVOID params), LPVOID params) {
+		while (!this->killSNM) {
+			SocketAddrPair sapRes = this->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
 
-			DWORD res = pSnm->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
+			DWORD res = this->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
 			if (!res) {
 				//TODO: kill interaction successfuly.
 			}
 
-			HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
-			if (hStopEvent == NULL) {
-				std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
-			}
+			HANDLE hStopEvent = this->threadManager.createNewEvent();
 
-			thread_data_t tData = { pSnm, sapRes };
+			thread_data_t tData = { sapRes, params };
 			LPVOID lpParameter = LPVOID(&tData);
 
-			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientThreadEntrypoint, lpParameter);
-			pSnm->threadManager.createNewThread(sapRes.first, pctClient);
+			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientHandlerFunc, lpParameter);
+			this->threadManager.createNewThread(sapRes.first, pctClient);
 		}
 		return true;
 	}
 
 	// the thread function that handles the client. 
 	// it uses the first interaction function to get essential data from the client.
-	DWORD WINAPI server::ServerNetworkManager::clientHandlerThreadFunc(LPVOID params) {
+	DWORD WINAPI server::clientHandlerFunc(LPVOID params) {
 		pthread_data_t ptData = static_cast<pthread_data_t>(params);
-		ServerNetworkManager* pSnm = ptData->pSnm;
-		SocketAddrPair sap = ptData->sap;
-		interaction_data_t res = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 
+		ServerManager* pSm = static_cast<ServerManager*>(ptData->params);
+		ServerNetworkManager* pSnm = &pSm->snManager;
+		SocketAddrPair sap = ptData->sap;
+
+		interaction_data_t res = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
 
 		if (res.isHost) {
-
 			RoomHost roomHost = { pSnm->eServerSocket.sock,res.userName };
 
 			pRoom proom = new Room();
@@ -181,20 +168,23 @@ namespace server {
 			proom->roomID = roomID;
 			proom->roomPassword = roomPassword;
 
-			pSnm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
+			pSm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
 		}
 		else {
 			RoomClient roomClient = { sap.first,res.userName };
 			pRoomClient prc = &roomClient; // pointer to the new room client
-			bool cRes = pSnm->roomManager.addClientToRoom(roomID, prc);
+			bool cRes = pSm->roomManager.addClientToRoom(roomID, prc);
 			if (!cRes) {
 				//TODO: kill interaction
 			}
 		}
 
 		bool on = true;
-		while (on) {
+		SOCKET clientSock = sap.first;
+		CHAR pBuffer[MAX_MSG_SIZE] = { 0 };
 
+		while (on) {
+			pSnm->eServerSocket.recvData(clientSock, pBuffer, MAX_MSG_SIZE, 0);
 		}
 		// TODO: add a while loop that checks for additional messages.
 		// Such as: start room ,leave room, etc.
@@ -212,27 +202,32 @@ namespace server {
 	// --------------------------------------- //
 
 	server::RoomManager::RoomManager() {
-		this->pRoomMap = new std::unordered_map<DWORD, pRoom>;
+
 	};
 
 	server::RoomManager::~RoomManager() {
+		for (std::pair<DWORD, pRoom> room : this->roomMap) {
+			auto proom = room.second;
+			proom->pRoomVector->~vector();
 
+		}
 	};
 
 	bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
-		this->pRoomMap->insert(std::make_pair(roomID, ptrRoom));
+		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
 
 		return true;
 	};
 
 	bool server::RoomManager::deleteRoom(DWORD roomID) {
-		this->pRoomMap->erase(roomID);
+		this->roomMap[roomID]->pRoomVector->~vector();
+		this->roomMap.erase(roomID);
 
 		return true;
 	};
 
 	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
-		auto ptrRoom = (*this->pRoomMap)[roomID];
+		auto ptrRoom = this->roomMap[roomID];
 		ptrRoom->pRoomVector->push_back(pClient);
 
 		std::cout << "Added client " << pClient->sock << "to room " << roomID;
@@ -241,16 +236,25 @@ namespace server {
 	};
 
 	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
-		auto ptrRoom = (*this->pRoomMap)[roomID];
-		auto pRoomVector = *ptrRoom->pRoomVector;
+		auto ptrRoom = this->roomMap[roomID];
+		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
 
 		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
-			if (pRoomVector[i]->sock == clientSock)
-				pRoomVector.erase(pRoomVector.begin() + i);
+			if (pRoomVector->at(i)->sock == clientSock)
+				pRoomVector->erase(pRoomVector->begin() + i);
 		}
 		std::cout << "removed client " << clientSock << "from room " << roomID;
 
 		return true;
 	};
 
+	// --------------------------------------- //
+
+	server::RoomMessageParser::RoomMessageParser() {
+
+	}
+
+	server::RoomMessageParser::~RoomMessageParser() {
+
+	}
 }

@@ -87,7 +87,7 @@ namespace concurrency {
 		~ThreadManager();
 
 		bool createNewThread(DWORD key, pConThread ctThread);
-
+		HANDLE createNewEvent();
 		bool killThread(DWORD index);
 
 	private:

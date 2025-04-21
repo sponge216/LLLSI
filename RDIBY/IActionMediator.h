@@ -28,6 +28,7 @@ private:
 	DWORD typeID; // ID of the type of the action (which class it belongs to)
 	DWORD actionID; // ID that signifies what the action is supposed to be. (create, delete, etc)
 	concurrency::ConditionVariable* cv; // condition variable to ping that the action is done.
+	LPVOID returnBuffer;
 	ActionData* pData; // pointer to action-related data
 
 };
@@ -52,10 +53,10 @@ public:
 	};
 	~Mediator() {
 		this->pListenersVector->~vector();
+		this->ptsQueue->~ThreadSafeQueue();
 	}
 	ThreadSafeQueue<Action>* getTSQPointer() {
 		return this->ptsQueue;
-
 	}
 	void addListener(IActionListener* pListener) {
 		auto pListenersVector = this->pListenersVector;
