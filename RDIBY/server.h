@@ -16,9 +16,23 @@ namespace server {
 	constexpr auto DEFAULT_BACKLOG = 20;
 	constexpr auto DEFAULT_PORT = "8080";
 	constexpr auto ROOM_SIZE = 20;
-
-	typedef std::pair<SOCKET, sockaddr*> SocketAddrPair;
+	constexpr auto MAX_NAME_SIZE = 10;
+	typedef std::pair<SOCKET, sockaddr_in*> SocketAddrPair;
 	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
+
+	/// <summary>
+	/// msgType - the type of message.
+	/// </summary>
+	typedef struct {
+		UCHAR msgType;
+		typedef union {
+			typedef union {
+				sockaddr_in sockAddr4;
+				sockaddr_in6 sockAddr6;
+			}ip_addr_info_t;
+			CHAR name[MAX_NAME_SIZE];
+		}server_msg_data_t;
+	} server_room_msg_t;
 
 	inline bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
 		return a.first == b.first && a.second == b.second;
@@ -45,9 +59,7 @@ namespace server {
 		bool initListen(DWORD backlog = DEFAULT_BACKLOG);
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr* addr = NULL, int* addrLen = NULL);
-
-
+		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr = NULL, int* addrLen = NULL);
 	private:
 		std::vector<SocketAddrPair> sapVector;
 	};
@@ -81,13 +93,7 @@ namespace server {
 	// --------------------------------------- //
 
 	// TODO: FIX NESTING LEVELS OF ROOM MANAGER!
-	class ServerManager {
-	public:
-		ServerNetworkManager snManager;
-		RoomManager roomManager;
-		concurrency::ThreadManager threadManager;
 
-	};
 
 	// --------------------------------------- //
 
@@ -112,7 +118,7 @@ namespace server {
 	// --------------------------------------- //
 
 	typedef struct roomClient_t {
-		SOCKET sock = -1;
+		SocketAddrPair sap = SAP_NULL;
 		char* name = NULL;
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 
@@ -167,5 +173,18 @@ namespace server {
 
 	// --------------------------------------- //
 
+	class ServerManager {
+	public:
+		ServerManager();
+		~ServerManager();
+
+		bool endRoom(pRoom roomPtr, bool startStreaming);
+
+		ServerNetworkManager snManager;
+		RoomManager roomManager;
+		concurrency::ThreadManager threadManager;
+	private:
+
+	};
 }
 #endif //APP_NETWORK_SERVER_H

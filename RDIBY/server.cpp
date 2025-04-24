@@ -2,6 +2,30 @@
 
 namespace server {
 
+	server::ServerManager::ServerManager() {
+
+	}
+
+	server::ServerManager::~ServerManager() {
+
+	}
+
+	bool server::ServerManager::endRoom(pRoom roomPtr, bool startStreaming) {
+		pRoomHost prHost = roomPtr->host;
+		SOCKET hostSock = prHost->sap.first;
+		sockaddr_in* pHostAddr = prHost->sap.second;
+		ServerNetworkManager* pSnm = &this->snManager;
+
+		auto pClientsVec = roomPtr->pRoomVector;
+		for (pRoomClient prClient : *pClientsVec) {
+			
+
+		}
+
+	}
+
+	// --------------------------------------- //
+
 	server::ServerSocket::ServerSocket() {
 		this->init();
 	}
@@ -92,12 +116,12 @@ namespace server {
 	/// <param name="addr">address struct buffer for holding addr info. Default value is NULL</param>
 	/// <param name="addrLen">length of addr. Default value is NULL</param>
 	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
-	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr* addr, int* addrLen) {
-		sockaddr tempAddr = { 0 };
+	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr, int* addrLen) {
+		sockaddr_in tempAddr = { 0 };
 		if (addr == NULL)
 			addr = &tempAddr;
 
-		SOCKET clientSocket = accept(serverSocket, addr, addrLen);
+		SOCKET clientSocket = accept(serverSocket, (sockaddr*)addr, addrLen);
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
 			WSACleanup();
@@ -160,7 +184,7 @@ namespace server {
 		DWORD roomPassword = 0; // TODO: hash res.password;
 
 		if (res.isHost) {
-			RoomHost roomHost = { pSnm->eServerSocket.sock,res.userName };
+			RoomHost roomHost = { sap,res.userName };
 
 			pRoom proom = new Room();
 			proom->dwCurrRoomSize++;
@@ -171,7 +195,7 @@ namespace server {
 			pSm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
 		}
 		else {
-			RoomClient roomClient = { sap.first,res.userName };
+			RoomClient roomClient = { sap,res.userName };
 			pRoomClient prc = &roomClient; // pointer to the new room client
 			bool cRes = pSm->roomManager.addClientToRoom(roomID, prc);
 			if (!cRes) {
@@ -230,7 +254,7 @@ namespace server {
 		auto ptrRoom = this->roomMap[roomID];
 		ptrRoom->pRoomVector->push_back(pClient);
 
-		std::cout << "Added client " << pClient->sock << "to room " << roomID;
+		std::cout << "Added client " << pClient->sap.first << "to room " << roomID;
 
 		return true;
 	};
@@ -240,7 +264,7 @@ namespace server {
 		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
 
 		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
-			if (pRoomVector->at(i)->sock == clientSock)
+			if (pRoomVector->at(i)->sap.first == clientSock)
 				pRoomVector->erase(pRoomVector->begin() + i);
 		}
 		std::cout << "removed client " << clientSock << "from room " << roomID;
