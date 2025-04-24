@@ -16,11 +16,27 @@ namespace server {
 		sockaddr_in* pHostAddr = prHost->sap.second;
 		ServerNetworkManager* pSnm = &this->snManager;
 
-		auto pClientsVec = roomPtr->pRoomVector;
-		for (pRoomClient prClient : *pClientsVec) {
-			
+		server_room_msg_t clientResponse = { 0 };
+		server_room_msg_t msg = { 0 };
+		msg.msgType = 0;
+		msg.msgData.ipAddrInfo.sockAddr4 = *pHostAddr;
 
+		auto pClientsVec = roomPtr->pRoomVector;
+
+		if (startStreaming) {
+			for (pRoomClient prClient : *pClientsVec) {
+				SOCKET clientSock = prClient->sap.first;
+				pSnm->eServerSocket.sendData(clientSock, (CHAR*)&msg, sizeof(msg), 1, 0);
+				pSnm->eServerSocket.recvData(clientSock, (CHAR*)&clientResponse, sizeof(clientResponse), 0);
+				//TODO: if (verify response)
+			}
 		}
+
+		for (pRoomClient prClient : *pClientsVec) {
+			SOCKET clientSock = prClient->sap.first;
+			closesocket(clientSock);
+		}
+
 
 	}
 

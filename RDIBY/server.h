@@ -20,18 +20,21 @@ namespace server {
 	typedef std::pair<SOCKET, sockaddr_in*> SocketAddrPair;
 	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
 
+	typedef union {
+		sockaddr_in sockAddr4;
+		sockaddr_in6 sockAddr6;
+	}ip_addr_info_t;
+
+	typedef union {
+		ip_addr_info_t ipAddrInfo;
+		CHAR name[MAX_NAME_SIZE];
+	}server_msg_data_t;
 	/// <summary>
 	/// msgType - the type of message.
 	/// </summary>
 	typedef struct {
 		UCHAR msgType;
-		typedef union {
-			typedef union {
-				sockaddr_in sockAddr4;
-				sockaddr_in6 sockAddr6;
-			}ip_addr_info_t;
-			CHAR name[MAX_NAME_SIZE];
-		}server_msg_data_t;
+		server_msg_data_t msgData;
 	} server_room_msg_t;
 
 	inline bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
