@@ -9,7 +9,7 @@ namespace host {
 
 	}
 
-	bool host::HostSocket::initTCP(PCSTR pAddrStr, DWORD port) {
+	bool host::HostSocket::initTCP(PCSTR pAddrStr, USHORT port) {
 		int iResult = 0;
 
 		if (this->pAddrInfo != NULL) {

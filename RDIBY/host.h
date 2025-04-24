@@ -14,7 +14,7 @@ namespace host {
 	public:
 		HostSocket();
 		~HostSocket();
-		bool initTCP(PCSTR pAddrStr, DWORD port);
+		bool initTCP(PCSTR pAddrStr, USHORT port);
 		bool initUDP(PCSTR pAddrStr, PCSTR port);
 		bool initListen(DWORD backlog);
 		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;

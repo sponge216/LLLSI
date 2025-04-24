@@ -29,7 +29,7 @@ namespace events {
 		}
 	}
 	void events::KeyboardEventManager::InitiateDefaultKeyboardHook() {
-		this->SetKeyboardHook(events::KeyboardEventManager::KeyboardHookCallback);
+		this->SetKeyboardHook(events::KeyboardHookCallback);
 	}
 
 
@@ -86,7 +86,7 @@ void events::MouseEventManager::SetMouseHook(LRESULT(*HookFunction)(int nCode, W
 	}
 }
 void events::MouseEventManager::InitiateDefaultMouseHook() {
-	this->SetMouseHook(events::MouseEventManager::MouseHookCallback);
+	this->SetMouseHook(events::MouseHookCallback);
 }
 
 DWORD events::MouseFilter::findMatchingFlag(DWORD flag) {

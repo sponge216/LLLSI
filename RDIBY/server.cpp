@@ -37,7 +37,7 @@ namespace server {
 			closesocket(clientSock);
 		}
 
-
+		return true;
 	}
 
 	// --------------------------------------- //
@@ -111,6 +111,7 @@ namespace server {
 			fprintf(stdout, "Listen failed on Server Socket with error: %ld\n", WSAGetLastError());
 			return false;
 		}
+		return true;
 	}
 
 	DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
@@ -164,24 +165,28 @@ namespace server {
 	/// <param name="clientHandlerFunc">- function that handles the new client</param>
 	/// <param name="params">- parameters that need to be passed to clientHandlerFunc</param>
 	/// <returns></returns>
-	bool server::ServerNetworkManager::acceptFunc(DWORD WINAPI clientHandlerFunc(LPVOID params), LPVOID params) {
-		while (!this->killSNM) {
-			SocketAddrPair sapRes = this->eServerSocket.acceptNewConnection();
+	DWORD WINAPI server::acceptFunc(LPVOID params) {
+		accept_thread_data_t* pData = static_cast<accept_thread_data_t*>(params);
+
+		ServerManager* pSm = static_cast<ServerManager*>(pData->acceptParams);
+		ServerNetworkManager* pSnm = static_cast<ServerNetworkManager*>(&pSm->snManager);
+		while (!pSnm->killSNM) {
+			SocketAddrPair sapRes = pSnm->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
 
-			DWORD res = this->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
+			DWORD res = pSnm->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
 			if (!res) {
 				//TODO: kill interaction successfuly.
 			}
 
-			HANDLE hStopEvent = this->threadManager.createNewEvent();
+			HANDLE hStopEvent = pSnm->threadManager.createNewEvent();
 
-			thread_data_t tData = { sapRes, params };
+			thread_data_t tData = { sapRes, pData->threadParams };
 			LPVOID lpParameter = LPVOID(&tData);
 
-			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, clientHandlerFunc, lpParameter);
-			this->threadManager.createNewThread(sapRes.first, pctClient);
+			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, pData->clientHandlerFunc, lpParameter);
+			pSnm->threadManager.createNewThread(sapRes.first, pctClient);
 		}
 		return true;
 	}
@@ -248,7 +253,7 @@ namespace server {
 	server::RoomManager::~RoomManager() {
 		for (std::pair<DWORD, pRoom> room : this->roomMap) {
 			auto proom = room.second;
-			proom->pRoomVector->~vector();
+			delete proom->pRoomVector;
 
 		}
 	};
@@ -260,7 +265,7 @@ namespace server {
 	};
 
 	bool server::RoomManager::deleteRoom(DWORD roomID) {
-		this->roomMap[roomID]->pRoomVector->~vector();
+		delete this->roomMap[roomID]->pRoomVector;
 		this->roomMap.erase(roomID);
 
 		return true;
@@ -279,7 +284,7 @@ namespace server {
 		auto ptrRoom = this->roomMap[roomID];
 		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
 
-		for (int i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
+		for (DWORD i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
 			if (pRoomVector->at(i)->sap.first == clientSock)
 				pRoomVector->erase(pRoomVector->begin() + i);
 		}

@@ -6,7 +6,7 @@ namespace client {
 	client::ClientSocket::ClientSocket() {
 		this->sock = -1;
 	}
-	bool client::ClientSocket::initTCP(PCSTR pAddrStr, DWORD port) {
+	bool client::ClientSocket::initTCP(PCSTR pAddrStr, USHORT port) {
 		int iResult = 0;
 
 		if (this->pAddrInfo != NULL) {
@@ -49,7 +49,7 @@ namespace client {
 		}
 		return true;
 	}
-	bool client::ClientSocket::initUDP(PCSTR pAddrStr, DWORD port) {
+	bool client::ClientSocket::initUDP(PCSTR pAddrStr, USHORT port) {
 		int iResult = 0;
 
 		if (this->pAddrInfo != NULL) {

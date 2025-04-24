@@ -20,6 +20,16 @@ namespace server {
 	typedef std::pair<SOCKET, sockaddr_in*> SocketAddrPair;
 	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
 
+	DWORD WINAPI clientHandlerFunc(LPVOID);
+	DWORD WINAPI acceptFunc(LPVOID);
+	class ServerSocket;
+	class EncryptedServerSocket;
+	class ServerManager;
+	class ServerMediator;
+	class ServerNetworkManager;
+	class RoomManager;
+	class RoomMessage;
+
 	typedef union {
 		sockaddr_in sockAddr4;
 		sockaddr_in6 sockAddr6;
@@ -53,6 +63,11 @@ namespace server {
 		LPVOID params;
 	}thread_data_t, * pthread_data_t;
 
+	typedef struct {
+		LPVOID acceptParams;
+		LPVOID threadParams;
+		DWORD(__stdcall* clientHandlerFunc)(LPVOID);
+	}accept_thread_data_t;
 	class ServerSocket : public network::BaseSocket {
 	public:
 		ServerSocket();
@@ -105,17 +120,19 @@ namespace server {
 		ServerNetworkManager();
 		~ServerNetworkManager();
 
+		EncryptedServerSocket eServerSocket;
+		concurrency::ThreadManager threadManager;
+		bool killSNM = false;
+
 		void requestAction(Action action) override;
 		void executeAction(Action action) override;
 
-		EncryptedServerSocket eServerSocket;
-		concurrency::ThreadManager threadManager;
-
 		bool acceptFunc(DWORD WINAPI clientHandlerFunc(LPVOID params), LPVOID params);
 		interaction_data_t firstClientInteraction(SocketAddrPair sap);
+
 		//TODO: FIX ACCESS LEVELS!@!!!
 	private:
-		bool killSNM = false;
+
 	};
 
 	// --------------------------------------- //

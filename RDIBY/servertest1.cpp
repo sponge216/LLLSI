@@ -7,7 +7,7 @@ int test3(int testNum);
 int main(int argc, char** argv) {
 	//test1(1);
 	//test2(2);
-	test3(3);
+	test1(1);
 }
 
 // test to check if accept thread function works
@@ -21,7 +21,7 @@ int test1(int testNum) {
 	}
 	LPVOID lpParameter = (LPVOID)pSnm;
 
-	concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, pSnm->acceptThreadFunc, lpParameter);
+	concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent,server::acceptFunc , lpParameter);
 	pSnm->threadManager.createNewThread(pSnm->eServerSocket.sock, pctClient);
 
 	return 1;
@@ -32,8 +32,6 @@ int test2(int testNum) {
 	std::cout << "IN TEST  " << testNum << "\n";
 
 	server::ServerNetworkManager* pSnm = new server::ServerNetworkManager();
-	pSnm->acceptFunc(pSnm);
-
 	return 1;
 }
 
@@ -51,7 +49,7 @@ int test3(int testNum) {
 
 		for (int j = 0; j < roomsSize; j++) {
 			auto p = new server::RoomClient;
-			p->sock = j;
+			p->sap.first = j;
 			pRm->addClientToRoom(i, p);
 		}
 	}
@@ -64,5 +62,6 @@ int test3(int testNum) {
 		pRm->deleteRoom(i);
 	}
 	pRm->~RoomManager();
+
 	return 1;
 }

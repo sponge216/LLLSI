@@ -19,8 +19,8 @@ namespace client {
 	public:
 		ClientSocket();
 		~ClientSocket();
-		bool initTCP(PCSTR pAddrStr, DWORD port);
-		bool initUDP(PCSTR pAddrStr, DWORD port);
+		bool initTCP(PCSTR pAddrStr, USHORT port);
+		bool initUDP(PCSTR pAddrStr, USHORT port);
 		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 	};

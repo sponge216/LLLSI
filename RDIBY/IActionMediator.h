@@ -7,6 +7,10 @@
 #include "datastructures.h"
 #include "concurrency.h"
 
+class Action;
+class IActionListener;
+class ActionData;	
+class Mediator;
 /// <summary>
 /// interface for classes that want to interact with a Mediator.
 /// </summary>
