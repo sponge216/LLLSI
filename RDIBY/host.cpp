@@ -112,7 +112,41 @@ namespace host {
 
 	}
 	// --------------------------------------- //
+	//TODO: PUT CODE IN ALL OF THESE!
+	host::EncryptedHostSocket::EncryptedHostSocket() {
 
+	}
+	host::EncryptedHostSocket::~EncryptedHostSocket() {
+
+	}
+
+	bool host::EncryptedHostSocket::initTCP(PCSTR pAddrStr, USHORT port) {
+		return true;
+	}
+
+	bool host::EncryptedHostSocket::initUDP(PCSTR pAddrStr, PCSTR port) {
+		return true;
+	}
+
+	bool host::EncryptedHostSocket::initListen(DWORD backlog) {
+		return true;
+	}
+
+	DWORD host::EncryptedHostSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
+		return 1;
+	}
+	DWORD host::EncryptedHostSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+		return 1;
+	}
+
+	DWORD host::EncryptedHostSocket::firstServerInteraction() {
+		return 1;
+	}
+	DWORD host::EncryptedHostSocket::firstClientInteraction() {
+		return 1;
+	}
+
+	// --------------------------------------- //
 	host::HostNetworkManager::HostNetworkManager() {
 
 	}

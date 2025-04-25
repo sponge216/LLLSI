@@ -29,13 +29,16 @@ namespace host {
 	public:
 		EncryptedHostSocket();
 		~EncryptedHostSocket();
-		bool initTCP(PCSTR pAddrStr, DWORD port);
+		bool initTCP(PCSTR pAddrStr, USHORT port);
 		bool initUDP(PCSTR pAddrStr, PCSTR port);
 		bool initListen(DWORD backlog);
 
 		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
 		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
-		DWORD firstInteraction();
+
+		DWORD firstServerInteraction();
+		DWORD firstClientInteraction();
+
 	};
 	/// <summary>
 		/// 

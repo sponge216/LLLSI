@@ -110,6 +110,39 @@ namespace client {
 	}
 
 	// --------------------------------------- //
+	//TODO: PUT CODE IN ALL OF THESE!
+
+	client::EncryptedClientSocket::EncryptedClientSocket() {
+
+	}
+	client::EncryptedClientSocket::~EncryptedClientSocket() {
+
+	}
+
+	bool client::EncryptedClientSocket::initTCP() {
+		return true;
+	}
+
+	bool client::EncryptedClientSocket::initUDP() {
+		return true;
+	}
+
+	DWORD client::EncryptedClientSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
+		return 1;
+	}
+	DWORD client::EncryptedClientSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+		return 1;
+	}
+
+	DWORD client::EncryptedClientSocket::firstServerInteraction() {
+		return 1;
+	}
+
+	DWORD client::EncryptedClientSocket::firstHostInteraction() {
+		return 1;
+	}
+
+	// --------------------------------------- //
 
 	client::ClientNetworkManager::ClientNetworkManager() {
 
