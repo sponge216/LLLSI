@@ -7,8 +7,8 @@
 
 namespace events {
 
-	LRESULT __stdcall MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
-	LRESULT __stdcall KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+	/*LRESULT __stdcall MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+	LRESULT __stdcall KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam);*/
 
 	// struct for mouse-movement events.
 	typedef struct mouse_data {
@@ -57,10 +57,10 @@ namespace events {
 		void SetMouseHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam));
 
 	private:
-		HHOOK mouseHook;
-		MSLLHOOKSTRUCT mouseStruct; // mouse struct to hold info given from hook
+		static HHOOK mouseHook;
+		static MSLLHOOKSTRUCT mouseStruct; // mouse struct to hold info given from hook
 
-		LRESULT __stdcall MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+		static LRESULT __stdcall MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
 	};
 
 	class KeyboardEventManager {
@@ -82,10 +82,10 @@ namespace events {
 
 
 	private:
-		HHOOK keyboardHook;
-		KBDLLHOOKSTRUCT keyboardStruct; // keyboard struct to hold info given from hook
+		static HHOOK keyboardHook;
+		static KBDLLHOOKSTRUCT keyboardStruct; // keyboard struct to hold info given from hook
 
-		LRESULT __stdcall KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+		static LRESULT __stdcall KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
 	};
 
 	class EventManager {

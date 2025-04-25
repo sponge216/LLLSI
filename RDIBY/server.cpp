@@ -150,6 +150,43 @@ namespace server {
 
 	// --------------------------------------- //
 
+	server::EncryptedServerSocket::EncryptedServerSocket() {
+
+	}
+	server::EncryptedServerSocket::~EncryptedServerSocket() {
+
+	}
+
+	bool server::EncryptedServerSocket::initListen(DWORD backlog) {
+		this->serverSocket.initListen(backlog);
+
+		return true;
+	};
+
+	DWORD server::EncryptedServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
+		//TODO: add encryption stuff
+
+		return this->serverSocket.sendData(sock, pData, dwTypeSize, dwLen, flags);
+	};
+
+	DWORD server::EncryptedServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
+		DWORD len = this->serverSocket.recvData(sock, pBuffer, dwBufferLen, flags);
+		//TODO: decrypt stuff
+
+		return len;
+	};
+
+	SocketAddrPair server::EncryptedServerSocket::acceptNewConnection(sockaddr_in* addr, int* addrLen) {
+		return this->serverSocket.acceptNewConnection(this->serverSocket.sock, addr, addrLen);
+	};
+
+	DWORD server::EncryptedServerSocket::firstEncryptionInteraction(SocketAddrPair sap) {
+		//TODO: do encryption stuff
+		return 1;
+	};
+
+	// --------------------------------------- //
+
 	server::ServerNetworkManager::ServerNetworkManager() {
 
 	}
@@ -159,6 +196,13 @@ namespace server {
 		this->threadManager.~ThreadManager();
 	}
 
+	void server::ServerNetworkManager::requestAction(Action action) {
+
+	}
+
+	void server::ServerNetworkManager::executeAction(Action action) {
+
+	}
 	/// <summary>
 	/// server's response to an incoming client connection.
 	/// </summary>
@@ -293,6 +337,12 @@ namespace server {
 		return true;
 	};
 
+	void server::RoomManager::requestAction(Action action) {
+
+	}
+	void server::RoomManager::executeAction(Action action) {
+
+	}
 	// --------------------------------------- //
 
 	server::RoomMessageParser::RoomMessageParser() {

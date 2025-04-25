@@ -9,10 +9,8 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-namespace network {
 
-	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+namespace network {
 
 	class BaseSocket {
 

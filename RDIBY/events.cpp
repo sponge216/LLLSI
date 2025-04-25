@@ -18,7 +18,7 @@ namespace events {
 		}
 
 		// call the next hook in the hook chain. This is nessecary or your hook chain will break and the hook stops
-		return CallNextHookEx(keyboardHook, nCode, wParam, lParam);
+		return CallNextHookEx(events::KeyboardEventManager::keyboardHook, nCode, wParam, lParam);
 	}
 	void events::KeyboardEventManager::SetKeyboardHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam)) {
 		if (!(keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, HookFunction, NULL, 0)))
@@ -29,7 +29,7 @@ namespace events {
 		}
 	}
 	void events::KeyboardEventManager::InitiateDefaultKeyboardHook() {
-		this->SetKeyboardHook(events::KeyboardHookCallback);
+		this->SetKeyboardHook(events::KeyboardEventManager::KeyboardHookCallback);
 	}
 
 
@@ -75,7 +75,7 @@ LRESULT __stdcall events::MouseEventManager::MouseHookCallback(int nCode, WPARAM
 	}
 
 	// call the next hook in the hook chain. This is nessecary or your hook chain will break and the hook stops
-	return CallNextHookEx(mouseHook, nCode, wParam, lParam);
+	return CallNextHookEx(events::MouseEventManager::mouseHook, nCode, wParam, lParam);
 }
 void events::MouseEventManager::SetMouseHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam)) {
 	if (!(mouseHook = SetWindowsHookEx(WH_MOUSE_LL, HookFunction, NULL, 0)))
@@ -86,7 +86,7 @@ void events::MouseEventManager::SetMouseHook(LRESULT(*HookFunction)(int nCode, W
 	}
 }
 void events::MouseEventManager::InitiateDefaultMouseHook() {
-	this->SetMouseHook(events::MouseHookCallback);
+	this->SetMouseHook(events::MouseEventManager::MouseHookCallback);
 }
 
 DWORD events::MouseFilter::findMatchingFlag(DWORD flag) {

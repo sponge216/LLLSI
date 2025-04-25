@@ -9,7 +9,7 @@
 
 class Action;
 class IActionListener;
-class ActionData;	
+class ActionData;
 class Mediator;
 /// <summary>
 /// interface for classes that want to interact with a Mediator.
@@ -26,14 +26,12 @@ public:
 /// </summary>
 class Action {
 public:
-	virtual ActionData* getActionData() = 0;
-
-private:
 	DWORD typeID; // ID of the type of the action (which class it belongs to)
 	DWORD actionID; // ID that signifies what the action is supposed to be. (create, delete, etc)
 	concurrency::ConditionVariable* cv; // condition variable to ping that the action is done.
 	LPVOID returnBuffer;
 	ActionData* pData; // pointer to action-related data
+	virtual ActionData* getActionData();
 
 };
 

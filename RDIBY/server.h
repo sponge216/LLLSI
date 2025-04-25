@@ -29,7 +29,7 @@ namespace server {
 	class ServerNetworkManager;
 	class RoomManager;
 	class RoomMessage;
-
+	class ServerAction;
 	typedef union {
 		sockaddr_in sockAddr4;
 		sockaddr_in6 sockAddr6;
@@ -68,6 +68,7 @@ namespace server {
 		LPVOID threadParams;
 		DWORD(__stdcall* clientHandlerFunc)(LPVOID);
 	}accept_thread_data_t;
+
 	class ServerSocket : public network::BaseSocket {
 	public:
 		ServerSocket();
@@ -94,7 +95,7 @@ namespace server {
 
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(sockaddr* addr = NULL, int* addrLen = NULL);
+		SocketAddrPair acceptNewConnection(sockaddr_in* addr = NULL, int* addrLen = NULL);
 		DWORD firstEncryptionInteraction(SocketAddrPair sap);
 		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
 	private:
@@ -205,6 +206,11 @@ namespace server {
 		concurrency::ThreadManager threadManager;
 	private:
 
+	};
+
+	class ServerAction : Action {
+	public:
+		ActionData* getActionData() override;
 	};
 }
 #endif //APP_NETWORK_SERVER_H
