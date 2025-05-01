@@ -1,6 +1,13 @@
 #include "events.h"
 
 namespace events {
+
+	HHOOK events::KeyboardEventManager::keyboardHook = { 0 };
+	KBDLLHOOKSTRUCT events::KeyboardEventManager::keyboardStruct = { 0 };
+
+	HHOOK events::MouseEventManager::mouseHook = { 0 };
+	MSLLHOOKSTRUCT events::MouseEventManager::mouseStruct = { 0 };
+
 	events::KeyboardEventManager::KeyboardEventManager() {
 
 	}
@@ -20,6 +27,7 @@ namespace events {
 		// call the next hook in the hook chain. This is nessecary or your hook chain will break and the hook stops
 		return CallNextHookEx(events::KeyboardEventManager::keyboardHook, nCode, wParam, lParam);
 	}
+
 	void events::KeyboardEventManager::SetKeyboardHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam)) {
 		if (!(keyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, HookFunction, NULL, 0)))
 		{
@@ -28,6 +36,7 @@ namespace events {
 			MessageBox(NULL, a, b, MB_ICONERROR);
 		}
 	}
+
 	void events::KeyboardEventManager::InitiateDefaultKeyboardHook() {
 		this->SetKeyboardHook(events::KeyboardEventManager::KeyboardHookCallback);
 	}

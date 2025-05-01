@@ -98,8 +98,11 @@ namespace server {
 		SocketAddrPair acceptNewConnection(sockaddr_in* addr = NULL, int* addrLen = NULL);
 		DWORD firstEncryptionInteraction(SocketAddrPair sap);
 		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
+		SOCKET getSocket() {
+			return ServerSocket::sock;
+		}
 	private:
-		ServerSocket serverSocket;
+
 	};
 
 	// --------------------------------------- //

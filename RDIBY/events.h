@@ -55,12 +55,13 @@ namespace events {
 		/// </summary>	
 		void InitiateDefaultMouseHook();
 		void SetMouseHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam));
-
-	private:
 		static HHOOK mouseHook;
 		static MSLLHOOKSTRUCT mouseStruct; // mouse struct to hold info given from hook
 
 		static LRESULT __stdcall MouseHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+
+	private:
+		
 	};
 
 	class KeyboardEventManager {
@@ -80,12 +81,12 @@ namespace events {
 		/// <param name="HookFunction">-user provided callback function</param>
 		void SetKeyboardHook(LRESULT(*HookFunction)(int nCode, WPARAM wParam, LPARAM lParam));
 
-
-	private:
 		static HHOOK keyboardHook;
 		static KBDLLHOOKSTRUCT keyboardStruct; // keyboard struct to hold info given from hook
 
 		static LRESULT __stdcall KeyboardHookCallback(int nCode, WPARAM wParam, LPARAM lParam);
+	private:
+	
 	};
 
 	class EventManager {

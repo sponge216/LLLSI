@@ -12,18 +12,22 @@ int main(int argc, char** argv) {
 
 // test to check if accept thread function works
 int test1(int testNum) {
+	WSADATA wsaData;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	std::cout << "IN TEST  " << testNum << "\n";
 
-	server::ServerNetworkManager* pSnm = new server::ServerNetworkManager();
-	HANDLE hStopEvent = CreateEventA(NULL, true, false, NULL);
-	if (hStopEvent == NULL) {
-		std::cout << "failed to create stop event. last error: " << GetLastError() << "\n";
-	}
-	LPVOID lpParameter = (LPVOID)pSnm;
+	server::ServerManager* pSm = new server::ServerManager();
+	pSm->snManager.eServerSocket.initListen();
 
-	concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent,server::acceptFunc , lpParameter);
-	pSnm->threadManager.createNewThread(pSnm->eServerSocket.sock, pctClient);
+	server::accept_thread_data_t tData = { 0 };
+	tData.acceptParams = LPVOID(pSm);
+	tData.threadParams = LPVOID(pSm);
+	tData.clientHandlerFunc = server::clientHandlerFunc;
 
+	LPVOID lpParameter = LPVOID(&tData);
+	/*concurrency::pConThread pctClient = new concurrency::ConThread(NULL, server::acceptFunc, lpParameter);
+	pSm->threadManager.createNewThread(pSm->snManager.eServerSocket.getSocket(), pctClient);*/
+	server::acceptFunc(lpParameter);
 	return 1;
 }
 

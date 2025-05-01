@@ -134,9 +134,9 @@ namespace server {
 	/// <param name="addrLen">length of addr. Default value is NULL</param>
 	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
 	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr, int* addrLen) {
-		sockaddr_in tempAddr = { 0 };
+		sockaddr_in* pTempAddr = new sockaddr_in;
 		if (addr == NULL)
-			addr = &tempAddr;
+			addr = pTempAddr;
 
 		SOCKET clientSocket = accept(serverSocket, (sockaddr*)addr, addrLen);
 		if (clientSocket <= 1) {
@@ -158,7 +158,7 @@ namespace server {
 	}
 
 	bool server::EncryptedServerSocket::initListen(DWORD backlog) {
-		this->serverSocket.initListen(backlog);
+		ServerSocket::initListen(backlog);
 
 		return true;
 	};
@@ -166,18 +166,18 @@ namespace server {
 	DWORD server::EncryptedServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
 		//TODO: add encryption stuff
 
-		return this->serverSocket.sendData(sock, pData, dwTypeSize, dwLen, flags);
+		return ServerSocket::sendData(sock, pData, dwTypeSize, dwLen, flags);
 	};
 
 	DWORD server::EncryptedServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
-		DWORD len = this->serverSocket.recvData(sock, pBuffer, dwBufferLen, flags);
+		DWORD len = ServerSocket::recvData(sock, pBuffer, dwBufferLen, flags);
 		//TODO: decrypt stuff
 
 		return len;
 	};
 
 	SocketAddrPair server::EncryptedServerSocket::acceptNewConnection(sockaddr_in* addr, int* addrLen) {
-		return this->serverSocket.acceptNewConnection(this->serverSocket.sock, addr, addrLen);
+		return ServerSocket::acceptNewConnection(this->getSocket(), addr, addrLen);
 	};
 
 	DWORD server::EncryptedServerSocket::firstEncryptionInteraction(SocketAddrPair sap) {
@@ -284,6 +284,7 @@ namespace server {
 
 	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
 		interaction_data_t idData = { 0 };
+		idData.isHost = 1;
 
 		return idData;
 	}
