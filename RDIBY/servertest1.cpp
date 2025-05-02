@@ -12,8 +12,6 @@ int main(int argc, char** argv) {
 
 // test to check if accept thread function works
 int test1(int testNum) {
-	WSADATA wsaData;
-	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	std::cout << "IN TEST  " << testNum << "\n";
 
 	server::ServerManager* pSm = new server::ServerManager();

@@ -141,9 +141,15 @@ namespace server {
 
 	// --------------------------------------- //
 
-	typedef struct roomClient_t {
+	typedef class RoomClient {
+	public:
+		RoomClient();
+		RoomClient(SocketAddrPair, char*, bool);
+		~RoomClient();
+
 		SocketAddrPair sap = SAP_NULL;
 		char* name = NULL;
+		bool isHost = false;
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 
 	typedef struct room_t {

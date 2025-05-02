@@ -344,6 +344,7 @@ namespace server {
 	void server::RoomManager::executeAction(Action action) {
 
 	}
+
 	// --------------------------------------- //
 
 	server::RoomMessageParser::RoomMessageParser() {
@@ -352,5 +353,18 @@ namespace server {
 
 	server::RoomMessageParser::~RoomMessageParser() {
 
+	}
+
+	// --------------------------------------- //
+
+	server::RoomClient::RoomClient() {
+		this->sap = SAP_NULL;
+		this->name = NULL;
+		this->isHost = false;
+	}
+	server::RoomClient::RoomClient(SocketAddrPair sap, char* name, bool isHost) {
+		this->sap = sap;
+		this->name = name;
+		this->isHost = isHost;
 	}
 }
