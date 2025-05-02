@@ -52,11 +52,13 @@ public:
 		this->pData = nullptr;
 		this->pCv = nullptr;
 		this->returnBuffer = nullptr;
-	}
+	};
 	Action(DWORD typeID, DWORD actionID, ActionData* pData) {
 		this->typeID = typeID;
 		this->actionID = actionID;
 		this->pData = pData;
+		this->pCv = nullptr;
+		this->returnBuffer = nullptr;
 	};
 	Action(DWORD typeID, DWORD actionID, ActionData* pData, concurrency::ConditionVariable* pCv, LPVOID returnBuffer) {
 		this->typeID = typeID;
@@ -64,7 +66,7 @@ public:
 		this->pData = pData;
 		this->pCv = pCv;
 		this->returnBuffer = returnBuffer;
-	}
+	};
 
 	DWORD typeID; // ID of the type of the action (which class it belongs to)
 	DWORD actionID; // ID that signifies what the action is supposed to be. (create, delete, etc)

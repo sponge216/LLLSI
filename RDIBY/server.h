@@ -71,6 +71,23 @@ namespace server {
 		DWORD(__stdcall* clientHandlerFunc)(LPVOID);
 	}accept_thread_data_t;
 
+	class IServerActionListener : public IActionListener {
+	public:
+		IServerActionListener() : IActionListener() {
+
+		}
+	};
+
+	class NetworkAction : public Action {
+	public:
+		ActionData* getActionData() override;
+	};
+
+	class RoomAction : public Action {
+	public:
+		ActionData* getActionData() override;
+	};
+
 	class ServerSocket : public network::BaseSocket {
 	public:
 		ServerSocket();
@@ -221,20 +238,6 @@ namespace server {
 
 	};
 
-	class IServerActionListener : public IActionListener {
-		void executeAction(Action* pAction) override {
 
-		}
-	};
-
-	class NetworkAction : Action {
-	public:
-		ActionData* getActionData() override;
-	};
-
-	class RoomAction : Action {
-	public:
-		ActionData* getActionData() override;
-	};
 }
 #endif //APP_NETWORK_SERVER_H

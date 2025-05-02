@@ -12,13 +12,6 @@ namespace server {
 
 	}
 
-	server::ServerMediator::ServerMediator() : Mediator() {
-
-	}
-	server::ServerMediator::~ServerMediator() {
-
-	}
-
 	bool server::ServerManager::endRoom(pRoom roomPtr, bool startStreaming) {
 		pRoomHost prHost = roomPtr->prHost;
 		SOCKET hostSock = prHost->sap.first;
@@ -47,6 +40,15 @@ namespace server {
 		}
 
 		return true;
+	}
+
+	// --------------------------------------- //
+
+	server::ServerMediator::ServerMediator() : Mediator() {
+
+	}
+	server::ServerMediator::~ServerMediator() {
+
 	}
 
 	// --------------------------------------- //
@@ -195,7 +197,7 @@ namespace server {
 		return 1;
 	};
 
-	// --------------------------------------- //
+	// --------------------------------------- // 
 
 	server::ServerNetworkManager::ServerNetworkManager() {
 
@@ -207,8 +209,19 @@ namespace server {
 	}
 
 	void server::ServerNetworkManager::executeAction(Action* pAction) {
-
+		NetworkAction* pnAction = static_cast<NetworkAction*>(pAction);
+		//TODO: execute action
 	}
+
+	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
+		interaction_data_t idData = { 0 };
+		idData.isHost = 1;
+
+		return idData;
+	}
+
+	// --------------------------------------- //
+
 	/// <summary>
 	/// server's response to an incoming client connection.
 	/// </summary>
@@ -219,9 +232,11 @@ namespace server {
 		accept_thread_data_t* pData = static_cast<accept_thread_data_t*>(params);
 		ServerManager* pSm = static_cast<ServerManager*>(pData->acceptParams);
 		ServerNetworkManager* pSnm = static_cast<ServerNetworkManager*>(&pSm->snManager);
+		ServerMediator* pSMediator = static_cast<ServerMediator*>(&pSm->sMediator);
+		SocketAddrPair sapRes = SAP_NULL;
 
 		while (!pSnm->killSNM) {
-			SocketAddrPair sapRes = pSnm->eServerSocket.acceptNewConnection();
+			sapRes = pSnm->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
 
@@ -248,14 +263,15 @@ namespace server {
 
 		ServerManager* pSm = static_cast<ServerManager*>(ptData->params);
 		ServerNetworkManager* pSnm = &pSm->snManager;
+		ServerMediator* pSMediator = static_cast<ServerMediator*>(&pSm->sMediator);
 		SocketAddrPair sap = ptData->sap;
 
-		interaction_data_t res = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
+		interaction_data_t idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
-		RoomClient* prClient = new RoomClient(sap, res.userName, res.isHost);
+		RoomClient* prClient = new RoomClient(sap, idRes.userName, idRes.isHost);
 
-		if (res.isHost) {
+		if (idRes.isHost) {
 			pRoom proom = new Room();
 
 			proom->prHost = prClient;
@@ -286,13 +302,6 @@ namespace server {
 		// dont forget, when client leaves room kill their connection!
 
 		return 1;
-	}
-
-	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
-		interaction_data_t idData = { 0 };
-		idData.isHost = 1;
-
-		return idData;
 	}
 
 	// --------------------------------------- //
@@ -346,7 +355,8 @@ namespace server {
 	};
 
 	void server::RoomManager::executeAction(Action* pAction) {
-
+		RoomAction* prAction = static_cast<RoomAction*>(pAction);
+		//TODO: execute the action
 	}
 
 	// --------------------------------------- //

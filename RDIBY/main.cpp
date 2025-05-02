@@ -6,6 +6,8 @@
 #include "server.h"
 #include "host.h"
 #include "events.h"
+#include "datastructures.h"
+#include "IActionMediator.h"
 
 //
 //int main(int argc, char** argv) {
