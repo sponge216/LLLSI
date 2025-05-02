@@ -3,15 +3,24 @@
 namespace server {
 
 	server::ServerManager::ServerManager() {
-
+		this->sMediator.addListener(static_cast<IActionListener*>(&this->snManager));
+		this->sMediator.addListener(static_cast<IActionListener*>(&this->roomManager));
+		
 	}
 
 	server::ServerManager::~ServerManager() {
 
 	}
 
+	server::ServerMediator::ServerMediator() : Mediator() {
+
+	}
+	server::ServerMediator::~ServerMediator() {
+
+	}
+
 	bool server::ServerManager::endRoom(pRoom roomPtr, bool startStreaming) {
-		pRoomHost prHost = roomPtr->host;
+		pRoomHost prHost = roomPtr->prHost;
 		SOCKET hostSock = prHost->sap.first;
 		sockaddr_in* pHostAddr = prHost->sap.second;
 		ServerNetworkManager* pSnm = &this->snManager;
@@ -134,9 +143,9 @@ namespace server {
 	/// <param name="addrLen">length of addr. Default value is NULL</param>
 	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
 	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr, int* addrLen) {
-		sockaddr_in* pTempAddr = new sockaddr_in;
+		sockaddr_in tempAddr = { 0 };
 		if (addr == NULL)
-			addr = pTempAddr;
+			addr = &tempAddr;
 
 		SOCKET clientSocket = accept(serverSocket, (sockaddr*)addr, addrLen);
 		if (clientSocket <= 1) {
@@ -145,6 +154,7 @@ namespace server {
 			return server::SAP_NULL;
 		}
 		SocketAddrPair sadRes = SocketAddrPair(clientSocket, addr);
+
 		return sadRes;
 	}
 
@@ -196,11 +206,11 @@ namespace server {
 		this->threadManager.~ThreadManager();
 	}
 
-	void server::ServerNetworkManager::requestAction(Action action) {
+	void server::ServerNetworkManager::requestAction(Action* action) {
 
 	}
 
-	void server::ServerNetworkManager::executeAction(Action action) {
+	void server::ServerNetworkManager::executeAction(Action* action) {
 
 	}
 	/// <summary>
@@ -211,9 +221,9 @@ namespace server {
 	/// <returns></returns>
 	DWORD WINAPI server::acceptFunc(LPVOID params) {
 		accept_thread_data_t* pData = static_cast<accept_thread_data_t*>(params);
-
 		ServerManager* pSm = static_cast<ServerManager*>(pData->acceptParams);
 		ServerNetworkManager* pSnm = static_cast<ServerNetworkManager*>(&pSm->snManager);
+
 		while (!pSnm->killSNM) {
 			SocketAddrPair sapRes = pSnm->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
@@ -247,22 +257,22 @@ namespace server {
 		interaction_data_t res = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
+		RoomClient* prClient = new RoomClient(sap, res.userName, res.isHost);
 
 		if (res.isHost) {
-			RoomHost roomHost = { sap,res.userName };
-
 			pRoom proom = new Room();
-			proom->dwCurrRoomSize++;
-			proom->host = &roomHost;
+
+			proom->prHost = prClient;
 			proom->roomID = roomID;
 			proom->roomPassword = roomPassword;
 
-			pSm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
+			bool cRes = pSm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
+			if (!cRes) {
+				//TODO: kill interaction
+			}
 		}
 		else {
-			RoomClient roomClient = { sap,res.userName };
-			pRoomClient prc = &roomClient; // pointer to the new room client
-			bool cRes = pSm->roomManager.addClientToRoom(roomID, prc);
+			bool cRes = pSm->roomManager.addClientToRoom(roomID, prClient);
 			if (!cRes) {
 				//TODO: kill interaction
 			}
@@ -328,8 +338,9 @@ namespace server {
 	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
 		auto ptrRoom = this->roomMap[roomID];
 		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
+		auto roomSize = ptrRoom->getRoomSize();
 
-		for (DWORD i = 0; i < ptrRoom->dwCurrRoomSize; i++) {
+		for (DWORD i = 0; i < roomSize; i++) {
 			if (pRoomVector->at(i)->sap.first == clientSock)
 				pRoomVector->erase(pRoomVector->begin() + i);
 		}
@@ -338,10 +349,10 @@ namespace server {
 		return true;
 	};
 
-	void server::RoomManager::requestAction(Action action) {
+	void server::RoomManager::requestAction(Action* action) {
 
 	}
-	void server::RoomManager::executeAction(Action action) {
+	void server::RoomManager::executeAction(Action* action) {
 
 	}
 
@@ -355,6 +366,27 @@ namespace server {
 
 	}
 
+	// --------------------------------------- //
+	server::Room::Room() {
+		this->pRoomVector = new std::vector<pRoomClient>;
+		this->prHost = nullptr;
+		this->roomID = 0;
+		this->roomPassword = 0;
+
+	}
+	server::Room::Room(pRoomHost prHost, DWORD roomID, DWORD password) {
+		this->pRoomVector = new std::vector<pRoomClient>;
+		this->prHost = prHost;
+		this->roomID = roomID;
+		this->roomPassword = password;
+	}
+	server::Room::~Room() {
+
+	}
+
+	DWORD server::Room::getRoomSize() {
+		return this->pRoomVector->size() + (this->prHost != nullptr ? 1 : 0);
+	}
 	// --------------------------------------- //
 
 	server::RoomClient::RoomClient() {

@@ -12,11 +12,11 @@
 
 
 namespace server {
-
 	constexpr auto DEFAULT_BACKLOG = 20;
 	constexpr auto DEFAULT_PORT = "8080";
 	constexpr auto ROOM_SIZE = 20;
 	constexpr auto MAX_NAME_SIZE = 10;
+
 	typedef std::pair<SOCKET, sockaddr_in*> SocketAddrPair;
 	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
 
@@ -107,8 +107,10 @@ namespace server {
 
 	// --------------------------------------- //
 
-	class ServerMediator : Mediator {
-
+	class ServerMediator : public Mediator {
+	public:
+		ServerMediator();
+		~ServerMediator();
 
 	};
 
@@ -119,7 +121,7 @@ namespace server {
 
 	// --------------------------------------- //
 
-	class ServerNetworkManager : IActionListener {
+	class ServerNetworkManager : public IActionListener {
 	public:
 		ServerNetworkManager();
 		~ServerNetworkManager();
@@ -128,10 +130,10 @@ namespace server {
 		concurrency::ThreadManager threadManager;
 		bool killSNM = false;
 
-		void requestAction(Action action) override;
-		void executeAction(Action action) override;
+		void requestAction(Action* action) override;
+		void executeAction(Action* action) override;
 
-		bool acceptFunc(DWORD WINAPI clientHandlerFunc(LPVOID params), LPVOID params);
+		bool acceptFunc(LPVOID params);
 		interaction_data_t firstClientInteraction(SocketAddrPair sap);
 
 		//TODO: FIX ACCESS LEVELS!@!!!
@@ -152,25 +154,26 @@ namespace server {
 		bool isHost = false;
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 
-	typedef struct room_t {
+	typedef class Room {
+	public:
+		Room();
+		Room(pRoomHost, DWORD, DWORD);
+		~Room();
+		DWORD getRoomSize();
+
 		std::vector<pRoomClient>* pRoomVector;
-		pRoomHost host = NULL;
-		DWORD roomID = 0;
-		DWORD roomPassword = 0;
-		DWORD dwCurrRoomSize = 0;
+		pRoomHost prHost;
+		DWORD roomID;
+		DWORD roomPassword;
+	} *pRoom;
 
-		room_t() :pRoomVector(new std::vector<pRoomClient>), host(NULL), roomID(0), roomPassword(0), dwCurrRoomSize(0) {
-
-		}
-	} Room, * pRoom;
-
-	class RoomManager : IActionListener {
+	class RoomManager : public IActionListener {
 	public:
 		RoomManager();
 		~RoomManager();
 
-		void requestAction(Action action) override;
-		void executeAction(Action action) override;
+		void requestAction(Action* action) override;
+		void executeAction(Action* action) override;
 
 		bool createNewRoom(DWORD roomID, pRoom room);
 		bool deleteRoom(DWORD roomID);
@@ -213,6 +216,7 @@ namespace server {
 		ServerNetworkManager snManager;
 		RoomManager roomManager;
 		concurrency::ThreadManager threadManager;
+		ServerMediator sMediator;
 	private:
 
 	};

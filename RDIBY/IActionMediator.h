@@ -16,9 +16,25 @@ class Mediator;
 /// </summary>
 class IActionListener {
 public:
-	ThreadSafeQueue<Action>* ptsQueue;
-	virtual void requestAction(Action action) = 0;
-	virtual void executeAction(Action action) = 0;
+	virtual void requestAction(Action* action) = 0;
+	virtual void executeAction(Action* action) = 0;
+
+	void acquireQueue() {
+		this->pCriticalSection->enter();
+	}
+	void releaseQueue() {
+		this->pCriticalSection->release();
+	}
+	void setCriticalSection(concurrency::CriticalSection* pCriticalSection) {
+		this->pCriticalSection = pCriticalSection;
+	}
+	void setPtsQueue(ThreadSafeQueue<Action*>* ptsQueue) {
+		this->ptsQueue = ptsQueue;
+	}
+private:
+	concurrency::CriticalSection* pCriticalSection;
+	ThreadSafeQueue<Action*>* ptsQueue;
+
 };
 
 /// <summary>
@@ -26,6 +42,8 @@ public:
 /// </summary>
 class Action {
 public:
+	Action(DWORD, DWORD, ActionData*);
+	Action(DWORD, DWORD, ActionData*, concurrency::ConditionVariable*, LPVOID);
 	DWORD typeID; // ID of the type of the action (which class it belongs to)
 	DWORD actionID; // ID that signifies what the action is supposed to be. (create, delete, etc)
 	concurrency::ConditionVariable* cv; // condition variable to ping that the action is done.
@@ -50,35 +68,42 @@ class Mediator {
 public:
 	Mediator() {
 		this->pListenersVector = new std::vector<IActionListener*>;
-		this->ptsQueue = new ThreadSafeQueue<Action>();
+		this->ptsQueue = new ThreadSafeQueue<Action*>();
+		this->pCriticalSection = new concurrency::CriticalSection();
 		this->run = true;
 	};
 	~Mediator() {
-		this->pListenersVector->~vector();
-		this->ptsQueue->~ThreadSafeQueue();
+		this->run = false;
+		delete this->pListenersVector;
+		delete this->ptsQueue;
+		delete this->pCriticalSection;
 	}
-	ThreadSafeQueue<Action>* getTSQPointer() {
+	ThreadSafeQueue<Action*>* getTSQPointer() {
 		return this->ptsQueue;
 	}
 	void addListener(IActionListener* pListener) {
 		auto pListenersVector = this->pListenersVector;
 		pListenersVector->push_back(pListener);
-		pListener->ptsQueue = this->ptsQueue;
+		pListener->setPtsQueue(this->ptsQueue);
+		pListener->setCriticalSection(this->pCriticalSection);
+
 	};
 	void removeListener(IActionListener* pListener) {
 		auto pListenersVector = this->pListenersVector;
 		auto plvStart = pListenersVector->begin();
-		auto plvEnd = pListenersVector->begin();
+		auto plvEnd = pListenersVector->end();
 
+		pListener->setPtsQueue(nullptr);
+		pListener->setCriticalSection(nullptr);
 		auto res = std::find(plvStart, plvEnd, pListener);
 		if (res != plvEnd)
 			pListenersVector->erase(res);
-
-		pListener->ptsQueue = nullptr;
 	};
+
 private:
 	std::vector<IActionListener*>* pListenersVector; // pointer to vector of IActionListener pointers
-	ThreadSafeQueue<Action>* ptsQueue;
+	ThreadSafeQueue<Action*>* ptsQueue;
+	concurrency::CriticalSection* pCriticalSection;
 	bool run;
 };
 #endif // APP_ACTION_MEDIATOR_H
