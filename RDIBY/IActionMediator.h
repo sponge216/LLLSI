@@ -16,8 +16,12 @@ class Mediator;
 /// </summary>
 class IActionListener {
 public:
-	virtual void requestAction(Action* action) = 0;
-	virtual void executeAction(Action* action) = 0;
+	virtual void requestAction(Action* pAction) {
+		this->acquireQueue();
+		this->ptsQueue->Push(pAction);
+		this->releaseQueue();
+	}
+	virtual void executeAction(Action* pAction) = 0;
 
 	void acquireQueue() {
 		this->pCriticalSection->enter();
@@ -42,11 +46,29 @@ private:
 /// </summary>
 class Action {
 public:
-	Action(DWORD, DWORD, ActionData*);
-	Action(DWORD, DWORD, ActionData*, concurrency::ConditionVariable*, LPVOID);
+	Action() {
+		this->typeID = -1;
+		this->actionID = -1;
+		this->pData = nullptr;
+		this->pCv = nullptr;
+		this->returnBuffer = nullptr;
+	}
+	Action(DWORD typeID, DWORD actionID, ActionData* pData) {
+		this->typeID = typeID;
+		this->actionID = actionID;
+		this->pData = pData;
+	};
+	Action(DWORD typeID, DWORD actionID, ActionData* pData, concurrency::ConditionVariable* pCv, LPVOID returnBuffer) {
+		this->typeID = typeID;
+		this->actionID = actionID;
+		this->pData = pData;
+		this->pCv = pCv;
+		this->returnBuffer = returnBuffer;
+	}
+
 	DWORD typeID; // ID of the type of the action (which class it belongs to)
 	DWORD actionID; // ID that signifies what the action is supposed to be. (create, delete, etc)
-	concurrency::ConditionVariable* cv; // condition variable to ping that the action is done.
+	concurrency::ConditionVariable* pCv; // condition variable to ping that the action is done.
 	LPVOID returnBuffer;
 	ActionData* pData; // pointer to action-related data
 	virtual ActionData* getActionData();

@@ -5,7 +5,7 @@ namespace server {
 	server::ServerManager::ServerManager() {
 		this->sMediator.addListener(static_cast<IActionListener*>(&this->snManager));
 		this->sMediator.addListener(static_cast<IActionListener*>(&this->roomManager));
-		
+
 	}
 
 	server::ServerManager::~ServerManager() {
@@ -206,11 +206,7 @@ namespace server {
 		this->threadManager.~ThreadManager();
 	}
 
-	void server::ServerNetworkManager::requestAction(Action* action) {
-
-	}
-
-	void server::ServerNetworkManager::executeAction(Action* action) {
+	void server::ServerNetworkManager::executeAction(Action* pAction) {
 
 	}
 	/// <summary>
@@ -349,10 +345,7 @@ namespace server {
 		return true;
 	};
 
-	void server::RoomManager::requestAction(Action* action) {
-
-	}
-	void server::RoomManager::executeAction(Action* action) {
+	void server::RoomManager::executeAction(Action* pAction) {
 
 	}
 

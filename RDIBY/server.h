@@ -30,6 +30,8 @@ namespace server {
 	class RoomManager;
 	class RoomMessage;
 	class ServerAction;
+	class IServerActionListener;
+
 	typedef union {
 		sockaddr_in sockAddr4;
 		sockaddr_in6 sockAddr6;
@@ -121,7 +123,7 @@ namespace server {
 
 	// --------------------------------------- //
 
-	class ServerNetworkManager : public IActionListener {
+	class ServerNetworkManager : public IServerActionListener {
 	public:
 		ServerNetworkManager();
 		~ServerNetworkManager();
@@ -130,8 +132,7 @@ namespace server {
 		concurrency::ThreadManager threadManager;
 		bool killSNM = false;
 
-		void requestAction(Action* action) override;
-		void executeAction(Action* action) override;
+		void executeAction(Action* pAction) override;
 
 		bool acceptFunc(LPVOID params);
 		interaction_data_t firstClientInteraction(SocketAddrPair sap);
@@ -167,13 +168,12 @@ namespace server {
 		DWORD roomPassword;
 	} *pRoom;
 
-	class RoomManager : public IActionListener {
+	class RoomManager : public IServerActionListener {
 	public:
 		RoomManager();
 		~RoomManager();
 
-		void requestAction(Action* action) override;
-		void executeAction(Action* action) override;
+		void executeAction(Action* pAction) override;
 
 		bool createNewRoom(DWORD roomID, pRoom room);
 		bool deleteRoom(DWORD roomID);
@@ -221,7 +221,18 @@ namespace server {
 
 	};
 
-	class ServerAction : Action {
+	class IServerActionListener : public IActionListener {
+		void executeAction(Action* pAction) override {
+
+		}
+	};
+
+	class NetworkAction : Action {
+	public:
+		ActionData* getActionData() override;
+	};
+
+	class RoomAction : Action {
 	public:
 		ActionData* getActionData() override;
 	};
