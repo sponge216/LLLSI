@@ -12,13 +12,14 @@ namespace server {
 
 	}
 
-	bool server::ServerManager::endRoom(pRoom roomPtr, bool startStreaming) {
+	bool server::ServerManager::endRoom(DWORD roomID, bool startStreaming) {
+		pRoom roomPtr = this->roomManager.getRoomPtr(roomID);
 		pRoomHost prHost = roomPtr->prHost;
 		SOCKET hostSock = prHost->sap.first;
 		sockaddr_in* pHostAddr = prHost->sap.second;
 		ServerNetworkManager* pSnm = &this->snManager;
 
-		server_room_msg_t clientResponse = { 0 };
+		RoomMessage clientResponse = RoomMessage();
 		server_room_msg_t msg = { 0 };
 		msg.msgType = 0;
 		msg.msgData.ipAddrInfo.sockAddr4 = *pHostAddr;
@@ -264,38 +265,55 @@ namespace server {
 		ServerManager* pSm = static_cast<ServerManager*>(ptData->params);
 		ServerNetworkManager* pSnm = &pSm->snManager;
 		ServerMediator* pSMediator = static_cast<ServerMediator*>(&pSm->sMediator);
+		RoomManager* pRm = static_cast<RoomManager*>(&pSm->roomManager);
 		SocketAddrPair sap = ptData->sap;
 
 		interaction_data_t idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
 		RoomClient* prClient = new RoomClient(sap, idRes.userName, idRes.isHost);
+		pRoom proom;
 
 		if (idRes.isHost) {
-			pRoom proom = new Room();
+			proom = new Room();
 
 			proom->prHost = prClient;
 			proom->roomID = roomID;
 			proom->roomPassword = roomPassword;
 
-			bool cRes = pSm->roomManager.createNewRoom(roomID, proom); // creates new room, if new client is a host.
+			bool cRes = pRm->createNewRoom(roomID, proom); // creates new room, if new client is a host.
 			if (!cRes) {
 				//TODO: kill interaction
 			}
 		}
 		else {
-			bool cRes = pSm->roomManager.addClientToRoom(roomID, prClient);
+			bool cRes = pRm->addClientToRoom(roomID, prClient);
 			if (!cRes) {
 				//TODO: kill interaction
 			}
+			proom = pRm->getRoomPtr(roomID);
 		}
 
 		bool on = true;
 		SOCKET clientSock = sap.first;
-		CHAR pBuffer[MAX_MSG_SIZE] = { 0 };
+		RoomMessage msgBuffer = RoomMessage();
 
 		while (on) {
-			pSnm->eServerSocket.recvData(clientSock, pBuffer, MAX_MSG_SIZE, 0);
+			pSnm->eServerSocket.recvData(clientSock, (CHAR*)&msgBuffer, sizeof(RoomMessage), 0);
+			switch (msgBuffer.msgType) {
+			case RoomMessageParser::LEAVE_MSG:
+				if (prClient->isHost)
+					pSm->endRoom(roomID, false);
+				else
+					pRm->removeClientFromRoom(roomID, prClient);
+				on = false;
+				break;
+			case RoomMessageParser::START_PUNCH_MSG:
+				pSm->endRoom(roomID, true);
+				on = false;
+				break;
+			}
+
 		}
 		// TODO: add a while loop that checks for additional messages.
 		// Such as: start room ,leave room, etc.
@@ -340,20 +358,23 @@ namespace server {
 		return true;
 	};
 
-	bool server::RoomManager::removeClientFromRoom(DWORD roomID, SOCKET clientSock) {
+	bool server::RoomManager::removeClientFromRoom(DWORD roomID, pRoomClient prClient) {
 		auto ptrRoom = this->roomMap[roomID];
 		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
 		auto roomSize = ptrRoom->getRoomSize();
 
 		for (DWORD i = 0; i < roomSize; i++) {
-			if (pRoomVector->at(i)->sap.first == clientSock)
+			if (pRoomVector->at(i) == prClient)
 				pRoomVector->erase(pRoomVector->begin() + i);
 		}
-		std::cout << "removed client " << clientSock << "from room " << roomID;
+		std::cout << "removed client " << prClient->name << "from room " << roomID;
 
 		return true;
 	};
 
+	pRoom server::RoomManager::getRoomPtr(DWORD roomID) {
+		return this->roomMap[roomID];
+	}
 	void server::RoomManager::executeAction(Action* pAction) {
 		RoomAction* prAction = static_cast<RoomAction*>(pAction);
 		//TODO: execute the action

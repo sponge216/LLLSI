@@ -196,7 +196,8 @@ namespace server {
 		bool deleteRoom(DWORD roomID);
 
 		bool addClientToRoom(DWORD roomID, pRoomClient pClient);
-		bool removeClientFromRoom(DWORD roomID, SOCKET clientSock);
+		bool removeClientFromRoom(DWORD roomID, pRoomClient prClient);
+		pRoom getRoomPtr(DWORD roomID);
 	private:
 		std::unordered_map<DWORD, pRoom> roomMap; // ID -> room map
 	};
@@ -217,8 +218,6 @@ namespace server {
 	class RoomMessage {
 	public:
 		DWORD msgType;
-		CHAR* clientName;
-		CHAR* password;
 	};
 
 	// --------------------------------------- //
@@ -228,7 +227,7 @@ namespace server {
 		ServerManager();
 		~ServerManager();
 
-		bool endRoom(pRoom roomPtr, bool startStreaming);
+		bool endRoom(DWORD roomID, bool startStreaming);
 
 		ServerNetworkManager snManager;
 		RoomManager roomManager;
