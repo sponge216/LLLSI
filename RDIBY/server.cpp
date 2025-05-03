@@ -19,13 +19,13 @@ namespace server {
 		pRoom roomPtr = this->roomManager.getRoomPtr(roomID);
 		pRoomHost prHost = roomPtr->prHost;
 		SOCKET hostSock = prHost->sap.first;
-		sockaddr_in* pHostAddr = prHost->sap.second;
+		sockaddr_in hostAddr = prHost->sap.second->addr;
 		ServerNetworkManager* pSnm = &this->snManager;
 
 		RoomMessage clientResponse = RoomMessage();
 		server_room_msg_t msg = { 0 };
 		msg.msgType = 0;
-		msg.msgData.ipAddrInfo.sockAddr4 = *pHostAddr;
+		msg.msgData.ipAddrInfo.sockAddr4 = hostAddr;
 
 		auto pClientsVec = roomPtr->pRoomVector;
 
@@ -148,18 +148,17 @@ namespace server {
 	/// <param name="addr">address struct buffer for holding addr info. Default value is NULL</param>
 	/// <param name="addrLen">length of addr. Default value is NULL</param>
 	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
-	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr, int* addrLen) {
-		sockaddr_in tempAddr = { 0 };
-		if (addr == NULL)
-			addr = &tempAddr;
+	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket) {
+		Addr* pAddr = new Addr();
 
-		SOCKET clientSocket = accept(serverSocket, (sockaddr*)addr, addrLen);
+		SOCKET clientSocket = accept(serverSocket, (sockaddr*)&pAddr->addr, pAddr->length);
 		if (clientSocket <= 1) {
 			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
 			WSACleanup();
 			return server::SAP_NULL;
 		}
-		SocketAddrPair sadRes = SocketAddrPair(clientSocket, addr);
+		SocketAddrPair sadRes = SocketAddrPair(clientSocket, pAddr);
+		std::cout << "Accepting new connection!";
 
 		return sadRes;
 	}
@@ -192,8 +191,8 @@ namespace server {
 		return len;
 	};
 
-	SocketAddrPair server::EncryptedServerSocket::acceptNewConnection(sockaddr_in* addr, int* addrLen) {
-		return ServerSocket::acceptNewConnection(this->getSocket(), addr, addrLen);
+	SocketAddrPair server::EncryptedServerSocket::acceptNewConnection() {
+		return ServerSocket::acceptNewConnection(this->getSocket());
 	};
 
 	DWORD server::EncryptedServerSocket::firstEncryptionInteraction(SocketAddrPair sap) {
@@ -241,6 +240,7 @@ namespace server {
 		SocketAddrPair sapRes = SAP_NULL;
 
 		while (!pSnm->killSNM) {
+
 			sapRes = pSnm->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
@@ -254,7 +254,7 @@ namespace server {
 
 			thread_data_t tData = { sapRes, pData->threadParams };
 			LPVOID lpParameter = LPVOID(&tData);
-
+			std::cout << "Client accepted! going into handling";
 			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, pData->clientHandlerFunc, lpParameter);
 			pSnm->threadManager.createNewThread(sapRes.first, pctClient);
 		}

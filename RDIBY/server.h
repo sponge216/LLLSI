@@ -17,13 +17,6 @@ namespace server {
 	constexpr auto ROOM_SIZE = 20;
 	constexpr auto MAX_NAME_SIZE = 10;
 
-	typedef std::pair<SOCKET, sockaddr_in*> SocketAddrPair;
-	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
-
-	DWORD WINAPI clientHandlerFunc(LPVOID);
-	DWORD WINAPI acceptFunc(LPVOID);
-	bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b);
-
 	class ServerSocket;
 	class EncryptedServerSocket;
 	class ServerManager;
@@ -33,6 +26,14 @@ namespace server {
 	class RoomMessage;
 	class ServerAction;
 	class IServerActionListener;
+	class Addr;
+
+	typedef std::pair<SOCKET, Addr*> SocketAddrPair;
+	constexpr SocketAddrPair SAP_NULL = SocketAddrPair(NULL, NULL);	// CREATE NULL CASE
+
+	DWORD WINAPI clientHandlerFunc(LPVOID);
+	DWORD WINAPI acceptFunc(LPVOID);
+	bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b);
 
 	typedef union {
 		sockaddr_in sockAddr4;
@@ -50,9 +51,6 @@ namespace server {
 		UCHAR msgType;
 		server_msg_data_t msgData;
 	} server_room_msg_t;
-
-		
-	
 
 	typedef struct {
 		char roomName[16];
@@ -74,6 +72,16 @@ namespace server {
 		LPVOID threadParams;
 		DWORD(__stdcall* clientHandlerFunc)(LPVOID);
 	}accept_thread_data_t;
+
+	class Addr {
+	public:
+		Addr() {
+			this->addr = { 0 };
+			this->length = nullptr;
+		}
+		sockaddr_in addr;
+		int* length;
+	};
 
 	class IServerActionListener : public IActionListener {
 	public:
@@ -101,7 +109,7 @@ namespace server {
 		bool initListen(DWORD backlog = DEFAULT_BACKLOG);
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(SOCKET serverSocket, sockaddr_in* addr = NULL, int* addrLen = NULL);
+		SocketAddrPair acceptNewConnection(SOCKET serverSocket);
 	private:
 		std::vector<SocketAddrPair> sapVector;
 	};
@@ -118,7 +126,7 @@ namespace server {
 
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		SocketAddrPair acceptNewConnection(sockaddr_in* addr = NULL, int* addrLen = NULL);
+		SocketAddrPair acceptNewConnection();
 		DWORD firstEncryptionInteraction(SocketAddrPair sap);
 		//TODO: DEFINE ALL OF THEM WHENEVER YOU BUILD THE CRYPTO LIB
 		SOCKET getSocket() {
