@@ -16,9 +16,9 @@ namespace client {
 	constexpr auto SERVER_IP_X = "172.20.10.7";
 
 	typedef struct first_server_interaction_t {
-		char roomName[16];
-		char clientName[16];
-		char roomPassword[16];
+		CHAR roomName[16];
+		CHAR clientName[16];
+		CHAR roomPassword[16];
 		BYTE clientNameLength;
 		BYTE roomNameLength;
 		BYTE roomPasswordLength;

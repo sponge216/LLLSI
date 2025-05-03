@@ -37,12 +37,7 @@ namespace server {
 
 	typedef union {
 		sockaddr_in sockAddr4;
-		sockaddr_in6 sockAddr6;
-	}ip_addr_info_t;
-
-	typedef union {
-		ip_addr_info_t ipAddrInfo;
-		CHAR name[MAX_NAME_SIZE];
+		CHAR name[16];
 	}server_msg_data_t;
 	/// <summary>
 	/// msgType - the type of message.
@@ -53,9 +48,9 @@ namespace server {
 	} server_room_msg_t;
 
 	typedef struct {
-		char roomName[16];
-		char clientName[16];
-		char roomPassword[16];
+		CHAR roomName[16];
+		CHAR clientName[16];
+		CHAR roomPassword[16];
 		BYTE clientNameLength;
 		BYTE roomNameLength;
 		BYTE roomPasswordLength;
@@ -176,11 +171,11 @@ namespace server {
 	typedef class RoomClient {
 	public:
 		RoomClient();
-		RoomClient(SocketAddrPair, char*, bool);
+		RoomClient(SocketAddrPair, CHAR*, bool);
 		~RoomClient();
 
 		SocketAddrPair sap = SAP_NULL;
-		char* name = NULL;
+		CHAR* name = NULL;
 		bool isHost = false;
 	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
 

@@ -25,7 +25,7 @@ namespace server {
 		RoomMessage clientResponse = RoomMessage();
 		server_room_msg_t msg = { 0 };
 		msg.msgType = 0;
-		msg.msgData.ipAddrInfo.sockAddr4 = hostAddr;
+		msg.msgData.sockAddr4 = hostAddr;
 
 		auto pClientsVec = roomPtr->pRoomVector;
 
@@ -254,7 +254,7 @@ namespace server {
 
 			thread_data_t tData = { sapRes, pData->threadParams };
 			LPVOID lpParameter = LPVOID(&tData);
-			std::cout << "Client accepted! going into handling";
+			std::cout << "Client accepted! going into handling\n";
 			concurrency::pConThread pctClient = new concurrency::ConThread(hStopEvent, pData->clientHandlerFunc, lpParameter);
 			pSnm->threadManager.createNewThread(sapRes.first, pctClient);
 		}
@@ -275,9 +275,11 @@ namespace server {
 		interaction_data_t idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
-		RoomClient* prClient = new RoomClient(sap, idRes.roomName, idRes.isHost);
+		RoomClient* prClient = new RoomClient(sap, idRes.clientName, idRes.isHost);
 		pRoom proom;
 
+		std::cout << "Handling client " << sap.first << "\n";
+		std::cout << "Client name: " << prClient->name << " Is client host? " << idRes.isHost << "\n";
 		if (idRes.isHost) {
 			proom = new Room();
 
@@ -285,25 +287,44 @@ namespace server {
 			proom->roomID = roomID;
 			proom->roomPassword = roomPassword;
 
+			std::cout << "Creating room " << idRes.roomName << "\n";
 			bool cRes = pRm->createNewRoom(roomID, proom); // creates new room, if new client is a host.
 			if (!cRes) {
 				//TODO: kill interaction
+				pSnm->threadManager.killThread(sap.first);
+				closesocket(sap.first);
+				delete sap.second;
+				delete prClient;
+				delete proom;
+				return 1;
 			}
 		}
 		else {
 			bool cRes = pRm->addClientToRoom(roomID, prClient);
 			if (!cRes) {
 				//TODO: kill interaction
+				pSnm->threadManager.killThread(sap.first);
+				closesocket(sap.first);
+				delete sap.second;
+				delete prClient;
+				return 1;
 			}
 			proom = pRm->getRoomPtr(roomID);
 		}
 
 		bool on = true;
 		SOCKET clientSock = sap.first;
-		RoomMessage msgBuffer = RoomMessage();
+		server_room_msg_t msgBuffer = { 0 };
+		std::cout << "going into client " << sap.first << " loop\n";
 
 		while (on) {
-			pSnm->eServerSocket.recvData(clientSock, (CHAR*)&msgBuffer, sizeof(RoomMessage), 0);
+			DWORD recvRes = pSnm->eServerSocket.recvData(clientSock, (CHAR*)&msgBuffer, sizeof(RoomMessage), 0);
+			if (!recvRes) {
+				std::cout << "receive from client " << clientSock << " failed!\n";
+				on = false;
+				break;
+			}
+
 			switch (msgBuffer.msgType) {
 			case RoomMessageParser::LEAVE_MSG:
 				if (prClient->isHost)
@@ -323,6 +344,12 @@ namespace server {
 		// Such as: start room ,leave room, etc.
 		// dont forget, when client leaves room kill their connection!
 
+		pSnm->threadManager.killThread(sap.first);
+		closesocket(sap.first);
+		delete sap.second;
+		delete prClient;
+		if (idRes.isHost)
+			delete proom;
 		return 1;
 	}
 
@@ -355,8 +382,10 @@ namespace server {
 
 	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
 		auto ptrRoom = this->roomMap[roomID];
-		ptrRoom->pRoomVector->push_back(pClient);
+		if (pClient == nullptr || ptrRoom == nullptr)
+			return false;
 
+		ptrRoom->pRoomVector->push_back(pClient);
 		std::cout << "Added client " << pClient->sap.first << "to room " << roomID;
 
 		return true;
@@ -422,9 +451,12 @@ namespace server {
 		this->name = NULL;
 		this->isHost = false;
 	}
-	server::RoomClient::RoomClient(SocketAddrPair sap, char* name, bool isHost) {
+	server::RoomClient::RoomClient(SocketAddrPair sap, CHAR* name, bool isHost) {
 		this->sap = sap;
 		this->name = name;
 		this->isHost = isHost;
+	}
+	server::RoomClient::~RoomClient() {
+
 	}
 }

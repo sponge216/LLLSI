@@ -12,7 +12,7 @@
 //	}
 //	return 1;
 //}
-//int main(int argc, char** argv) {
+//int main(int argc, CHAR** argv) {
 //	auto threadManager = concurrency::ThreadManager();
 //	for (int i = 0; i < 100; i++) {
 //		concurrency::ConThread cThread;

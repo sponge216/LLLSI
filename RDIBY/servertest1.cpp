@@ -4,7 +4,7 @@ int test1(int testNum);
 int test2(int testNum);
 int test3(int testNum);
 
-int main(int argc, char** argv) {
+int main(int argc, CHAR** argv) {
 	//test1(1);
 	//test2(2);
 	test1(1);
