@@ -13,7 +13,7 @@
 
 namespace server {
 	constexpr auto DEFAULT_BACKLOG = 20;
-	constexpr auto DEFAULT_PORT = "8080";
+	constexpr auto DEFAULT_PORT = "36542";
 	constexpr auto ROOM_SIZE = 20;
 	constexpr auto MAX_NAME_SIZE = 10;
 
@@ -22,6 +22,8 @@ namespace server {
 
 	DWORD WINAPI clientHandlerFunc(LPVOID);
 	DWORD WINAPI acceptFunc(LPVOID);
+	bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b);
+
 	class ServerSocket;
 	class EncryptedServerSocket;
 	class ServerManager;
@@ -49,14 +51,16 @@ namespace server {
 		server_msg_data_t msgData;
 	} server_room_msg_t;
 
-	inline bool compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
-		return a.first == b.first && a.second == b.second;
-	}
+		
+	
 
 	typedef struct {
-		char* roomName;
-		char* userName;
-		char* password;
+		char roomName[16];
+		char clientName[16];
+		char roomPassword[16];
+		BYTE clientNameLength;
+		BYTE roomNameLength;
+		BYTE roomPasswordLength;
 		bool isHost;
 	}interaction_data_t, * pinteraction_data;
 

@@ -3,6 +3,13 @@
 //TODO: CHANGE ALL FUNCTIONS TO RETURN ERROR CODES!!
 
 namespace client {
+	client::Client::Client() {
+
+	}
+	client::Client::~Client() {
+
+	}
+
 	client::ClientSocket::ClientSocket() {
 		this->sock = -1;
 	}
@@ -102,6 +109,7 @@ namespace client {
 		if (dwMsgLen <= 0) return -1;
 
 		DWORD res = send(sock, pData, dwMsgLen, flags);
+
 		return res;
 	}
 	DWORD client::ClientSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
@@ -115,27 +123,48 @@ namespace client {
 	client::EncryptedClientSocket::EncryptedClientSocket() {
 
 	}
+
 	client::EncryptedClientSocket::~EncryptedClientSocket() {
 
 	}
 
-	bool client::EncryptedClientSocket::initTCP() {
-		return true;
+	bool client::EncryptedClientSocket::initTCP(PCSTR pAddrStr, USHORT port) {
+		return ClientSocket::initTCP(pAddrStr, port);
 	}
 
-	bool client::EncryptedClientSocket::initUDP() {
-		return true;
+	bool client::EncryptedClientSocket::initUDP(PCSTR pAddrStr, USHORT port) {
+		return ClientSocket::initUDP(pAddrStr, port);
 	}
 
 	DWORD client::EncryptedClientSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
-		return 1;
+		return	ClientSocket::sendData(sock, pData, dwTypeSize, dwLen, flags);
 	}
 	DWORD client::EncryptedClientSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
-		return 1;
+		return ClientSocket::recvData(sock, pBuffer, dwBufferLen, flags);
 	}
 
-	DWORD client::EncryptedClientSocket::firstServerInteraction() {
-		return 1;
+	DWORD client::EncryptedClientSocket::firstServerInteraction(Client client) {
+		if (client.name.size() > 16 ||
+			client.roomName.size() > 16 ||
+			client.roomPassword.size() > 16)
+			return -1;
+
+		first_server_interaction_t fsi = { 0 };
+		DWORD res = this->recvData(this->sock, (CHAR*)&fsi, sizeof(fsi), 0);
+
+		for (int i = 0; i < client.name.size(); i++)
+			fsi.clientName[i] = client.name[i];
+		fsi.clientNameLength = client.name.size();
+
+		for (int i = 0; i < client.roomName.size(); i++)
+			fsi.roomName[i] = client.roomName[i];
+		fsi.roomNameLength = client.roomName.size();
+
+		for (int i = 0; i < client.roomPassword.size(); i++)
+			fsi.roomPassword[i] = client.roomPassword[i];
+		fsi.roomPasswordLength = client.roomPassword.size();
+
+		return this->sendData(this->sock, (CHAR*)&fsi, sizeof(fsi), 1, 0);
 	}
 
 	DWORD client::EncryptedClientSocket::firstHostInteraction() {

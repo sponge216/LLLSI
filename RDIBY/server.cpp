@@ -1,6 +1,9 @@
 #include "server.h"
 
 namespace server {
+	bool server::compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
+		return a.first == b.first && a.second == b.second;
+	}
 
 	server::ServerManager::ServerManager() {
 		this->sMediator.addListener(static_cast<IActionListener*>(&this->snManager));
@@ -206,7 +209,7 @@ namespace server {
 
 	server::ServerNetworkManager::~ServerNetworkManager() {
 		this->killSNM = true;
-		this->threadManager.~ThreadManager();
+
 	}
 
 	void server::ServerNetworkManager::executeAction(Action* pAction) {
@@ -216,7 +219,8 @@ namespace server {
 
 	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
 		interaction_data_t idData = { 0 };
-		idData.isHost = 1;
+		DWORD res = this->eServerSocket.sendData(sap.first, (CHAR*)&idData, sizeof(idData), 1, 0);
+		res = this->eServerSocket.recvData(sap.first, (CHAR*)&idData, sizeof(idData), 0);
 
 		return idData;
 	}
@@ -271,7 +275,7 @@ namespace server {
 		interaction_data_t idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
 		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
 		DWORD roomPassword = 0; // TODO: hash res.password;
-		RoomClient* prClient = new RoomClient(sap, idRes.userName, idRes.isHost);
+		RoomClient* prClient = new RoomClient(sap, idRes.roomName, idRes.isHost);
 		pRoom proom;
 
 		if (idRes.isHost) {

@@ -4,9 +4,14 @@
 
 #include "network.h"
 namespace host {
+
+	constexpr auto SERVER_PORT = 36542;
+	constexpr auto SERVER_IP = "172.20.10.4";
+	constexpr auto SERVER_IP_X = "172.20.10.7";
+
 	/// <summary>
-		///  socket for hosts.
-		/// </summary>
+	///  socket for hosts.
+	/// </summary>
 	class HostSocket :
 		public network::BaseSocket
 	{
@@ -17,8 +22,8 @@ namespace host {
 		bool initTCP(PCSTR pAddrStr, USHORT port);
 		bool initUDP(PCSTR pAddrStr, PCSTR port);
 		bool initListen(DWORD backlog);
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
 	};
 
 	// --------------------------------------- //
@@ -33,8 +38,8 @@ namespace host {
 		bool initUDP(PCSTR pAddrStr, PCSTR port);
 		bool initListen(DWORD backlog);
 
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags = 0) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags = 0) override;
 
 		DWORD firstServerInteraction();
 		DWORD firstClientInteraction();

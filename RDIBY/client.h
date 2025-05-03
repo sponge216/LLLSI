@@ -4,12 +4,35 @@
 #define APP_NETWORK_CLIENT_H
 
 #include "network.h"
-
+#include <string>
+#include <iostream>
 namespace client {
+	class ClientSocket;
+	class EncryptedClientSocket;
+	class ClientNetworkManager;
+	class Client;
+	constexpr auto SERVER_PORT = 36542;
+	constexpr auto SERVER_IP = "93.172.145.134";
+	constexpr auto SERVER_IP_X = "172.20.10.7";
 
-#define SERVER_PORT 36542
-#define SERVER_IP "172.20.10.4"
-#define SERVER_IP_X "172.20.10.7"
+	typedef struct first_server_interaction_t {
+		char roomName[16];
+		char clientName[16];
+		char roomPassword[16];
+		BYTE clientNameLength;
+		BYTE roomNameLength;
+		BYTE roomPasswordLength;
+		bool isHost;
+	}first_server_interaction, * pfirst_server_interaction;
+
+	class Client {
+	public:
+		Client();
+		~Client();
+		std::string name;
+		std::string roomName;
+		std::string roomPassword;
+	};
 
 	/// <summary>
 	/// socket for clients.
@@ -21,8 +44,8 @@ namespace client {
 		~ClientSocket();
 		bool initTCP(PCSTR pAddrStr, USHORT port);
 		bool initUDP(PCSTR pAddrStr, USHORT port);
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 	};
 
 	class EncryptedClientSocket : public ClientSocket
@@ -31,13 +54,13 @@ namespace client {
 		EncryptedClientSocket();
 		~EncryptedClientSocket();
 
-		bool initTCP();
-		bool initUDP();
+		bool initTCP(PCSTR pAddrStr, USHORT port);
+		bool initUDP(PCSTR pAddrStr, USHORT port);
 
-		inline DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
-		inline DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
+		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
+		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
 
-		DWORD firstServerInteraction();
+		DWORD firstServerInteraction(Client client);
 		DWORD firstHostInteraction();
 
 	};

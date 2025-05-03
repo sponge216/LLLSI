@@ -98,6 +98,10 @@ public:
 	};
 	~Mediator() {
 		this->run = false;
+		for (IActionListener* ialPtr : *this->pListenersVector) {
+			ialPtr->setCriticalSection(nullptr);
+			ialPtr->setPtsQueue(nullptr);
+		}
 		delete this->pListenersVector;
 		delete this->ptsQueue;
 		delete this->pCriticalSection;

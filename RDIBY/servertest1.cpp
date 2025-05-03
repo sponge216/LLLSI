@@ -44,26 +44,29 @@ int test3(int testNum) {
 
 	server::ServerNetworkManager* pSnm = new server::ServerNetworkManager();
 	server::RoomManager* pRm = new server::RoomManager;
-
+	std::vector<server::RoomClient*> vec;
 	for (int i = 0; i < roomsSize; i++) {
 		server::pRoom r = new server::Room();
 		pRm->createNewRoom(i, r);
 
 		for (int j = 0; j < roomsSize; j++) {
-			auto p = new server::RoomClient;
+			server::RoomClient* p = new server::RoomClient;
 			p->sap.first = j;
 			pRm->addClientToRoom(i, p);
+			vec.push_back(p);
 		}
 	}
 
 	for (int i = 0; i < roomsSize; i++) {
 
 		for (int j = 0; j < roomsSize; j++) {
-			pRm->removeClientFromRoom(i, j);
+			pRm->removeClientFromRoom(i, vec.back());
+			vec.pop_back();
 		}
 		pRm->deleteRoom(i);
 	}
-	pRm->~RoomManager();
+	delete pSnm;
+	delete pRm;
 
 	return 1;
 }
