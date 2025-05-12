@@ -1,4 +1,5 @@
 #include "server.h"
+#include "client.h"
 
 int test1(int testNum);
 int test2(int testNum);
@@ -23,9 +24,28 @@ int test1(int testNum) {
 	tData.clientHandlerFunc = server::clientHandlerFunc;
 
 	LPVOID lpParameter = LPVOID(&tData);
-	/*concurrency::pConThread pctClient = new concurrency::ConThread(NULL, server::acceptFunc, lpParameter);
-	pSm->threadManager.createNewThread(pSm->snManager.eServerSocket.getSocket(), pctClient);*/
-	server::acceptFunc(lpParameter);
+	concurrency::pConThread pctClient = new concurrency::ConThread(NULL, server::acceptFunc, lpParameter);
+	pSm->threadManager.createNewThread(pSm->snManager.eServerSocket.getSocket(), pctClient);
+
+	client::EncryptedClientSocket ecs = client::EncryptedClientSocket();
+	ecs.initUDP(36543);
+	server::server_room_msg_t msg = { 0 };
+	sockaddr_in inadr;
+	int len = sizeof(inadr);
+	while (1) {
+		recvfrom(ecs.sock, (char*)&msg, sizeof(msg), 0, (sockaddr*)&inadr, &len);
+		wchar_t ipAddress[INET_ADDRSTRLEN];
+		InetNtop(AF_INET, &inadr.sin_addr, ipAddress, INET_ADDRSTRLEN);
+
+		// Extract the port number (convert from network byte order to host byte order)
+		u_short port = ntohs(inadr.sin_port);
+
+		std::wcout << "IP Address udp: " << ipAddress << std::endl;
+		std::cout << "Port udp: " << port << std::endl;
+
+		memcpy_s(&msg.msgData.sockAddr4, sizeof(msg.msgData.sockAddr4), &inadr, sizeof(inadr));
+		sendto(ecs.sock, (char*)&msg, sizeof(msg), 0, (sockaddr*)&inadr, len);
+	}
 	return 1;
 }
 

@@ -1,9 +1,7 @@
 #include "server.h"
 
 namespace server {
-	bool server::compareSocketAddrPair(SocketAddrPair a, SocketAddrPair b) {
-		return a.first == b.first && a.second == b.second;
-	}
+	using namespace network;
 
 	server::ServerManager::ServerManager() {
 		this->sMediator.addListener(static_cast<IActionListener*>(&this->snManager));
@@ -15,214 +13,56 @@ namespace server {
 
 	}
 
-	bool server::ServerManager::endRoom(DWORD roomID, bool startStreaming) {
+	bool server::ServerManager::endRoom(size_t roomID, bool startStreaming) {
 		pRoom roomPtr = this->roomManager.getRoomPtr(roomID);
 		pRoomHost prHost = roomPtr->prHost;
 		SOCKET hostSock = prHost->sap.first;
-		sockaddr_in hostAddr = prHost->sap.second->addr;
+		sockaddr_in* pHostAddr = &prHost->sap.second->addr;
 		ServerNetworkManager* pSnm = &this->snManager;
 
-		RoomMessage clientResponse = RoomMessage();
-		server_room_msg_t msg = { 0 };
-		msg.msgType = 0;
-		msg.msgData.sockAddr4 = hostAddr;
+		server_room_msg_t msgToHost = { 0 };
+		server_room_msg_t msgToClient = { 0 };
+		server_room_msg_t leaveMsg = { 0 };
+		leaveMsg.msgType = RoomMessageParser::LEAVE_MSG;
 
-		auto pClientsVec = roomPtr->pRoomVector;
+		auto clientsVec = roomPtr->roomVector;
 
 		if (startStreaming) {
-			for (pRoomClient prClient : *pClientsVec) {
+			msgToClient.msgType = RoomMessageParser::START_PUNCH_MSG;
+			msgToHost.msgType = RoomMessageParser::START_PUNCH_MSG;
+			memcpy_s(&msgToClient.msgData.sockAddr4, sizeof(msgToClient.msgData.sockAddr4), pHostAddr, sizeof(*pHostAddr));
+
+			// send host all the clients addrs
+			for (pRoomClient prClient : clientsVec) {
+				sockaddr_in* pClientAddr = &prClient->sap.second->addr;
+
+				ZeroMemory(&msgToHost, sizeof(msgToHost));
+				msgToHost.msgType = RoomMessageParser::START_PUNCH_MSG;
+				memcpy_s(&msgToHost.msgData.sockAddr4, sizeof(msgToHost.msgData.sockAddr4), pClientAddr, sizeof(*pClientAddr));
+
+				pSnm->eServerSocket.sendData(hostSock, (CHAR*)&msgToHost, sizeof(msgToHost), 1, 0);
+			}
+
+			// send host addr to clients
+			for (pRoomClient prClient : clientsVec) {
 				SOCKET clientSock = prClient->sap.first;
-				pSnm->eServerSocket.sendData(clientSock, (CHAR*)&msg, sizeof(msg), 1, 0);
-				pSnm->eServerSocket.recvData(clientSock, (CHAR*)&clientResponse, sizeof(clientResponse), 0);
-				//TODO: if (verify response)
+				prClient->isLeaving = true;
+				pSnm->eServerSocket.sendData(clientSock, (CHAR*)&msgToClient, sizeof(msgToClient), 1, 0);
 			}
 		}
 
-		for (pRoomClient prClient : *pClientsVec) {
+		for (pRoomClient prClient : clientsVec) {
 			SOCKET clientSock = prClient->sap.first;
-			closesocket(clientSock);
+			pSnm->eServerSocket.sendData(clientSock, (CHAR*)&leaveMsg, sizeof(leaveMsg), 1, 0);
+			std::cout << "Sending off client " << clientSock << std::endl;
 		}
+		pSnm->eServerSocket.sendData(hostSock, (CHAR*)&leaveMsg, sizeof(leaveMsg), 1, 0);
+		std::cout << "Sending off host " << hostSock << std::endl;
 
+		this->roomManager.deleteRoom(roomID);
 		return true;
 	}
 
-	// --------------------------------------- //
-
-	server::ServerMediator::ServerMediator() : Mediator() {
-
-	}
-	server::ServerMediator::~ServerMediator() {
-
-	}
-
-	// --------------------------------------- //
-
-	server::ServerSocket::ServerSocket() {
-		this->init();
-	}
-
-	server::ServerSocket::~ServerSocket() {
-		fprintf(stdout, "Closing Server Socket. FD - %llu", this->sock);
-		freeaddrinfo(this->pAddrInfo);
-		closesocket(this->sock);
-	}
-
-	bool server::ServerSocket::init(PCSTR port, INT ai_family, INT ai_flags, INT ai_protocol, INT ai_socktype) {
-		if (this->pAddrInfo != NULL) {
-			this->hints = { 0 };
-			this->pAddrInfo = NULL;
-		}
-
-		SOCKET serverSocket;
-		struct addrinfo* pAddrInfo = NULL; // the address info struct, holds all info about the address.
-		struct addrinfo hints = { 0 }; // used to set the socket's behavior and address
-		ZeroMemory(&hints, sizeof(hints));
-
-		hints.ai_family = ai_family; // set internet family.
-		hints.ai_socktype = ai_socktype; //set socket type. We use TCP so we set it to sock_stream.
-		hints.ai_protocol = ai_protocol;
-		hints.ai_flags = ai_flags;
-
-		// Resolve the local address and port to be used by the server
-		int res = getaddrinfo(NULL, port, &hints, &pAddrInfo);
-		if (res != 0) {
-			printf("getaddrinfo failed: %d\n", res);
-			WSACleanup();
-			return false;
-		}
-
-		if ((serverSocket = socket(pAddrInfo->ai_family, pAddrInfo->ai_socktype, pAddrInfo->ai_protocol)) <= 1) {
-			printf("Error at socket: %ld\n", WSAGetLastError());
-			freeaddrinfo(pAddrInfo);
-			WSACleanup();
-			return false;
-		}
-
-		if (serverSocket == INVALID_SOCKET) {
-			printf("Error at socket: %ld\n", WSAGetLastError());
-			freeaddrinfo(pAddrInfo);
-			WSACleanup();
-			return false;
-		}
-
-		if (bind(serverSocket, pAddrInfo->ai_addr, (INT)pAddrInfo->ai_addrlen) == SOCKET_ERROR) {
-			printf("bind failed with error: %d\n", WSAGetLastError());
-			freeaddrinfo(pAddrInfo);
-			closesocket(serverSocket);
-			WSACleanup();
-			return false;
-		}
-
-		printf("Server Socket initiated!\n");
-
-		this->sock = serverSocket;
-		this->hints = hints;
-		this->pAddrInfo = pAddrInfo;
-		return true;
-	}
-
-	bool server::ServerSocket::initListen(DWORD backlog) {
-		if (listen(this->sock, backlog) < 0) {
-			fprintf(stdout, "Listen failed on Server Socket with error: %ld\n", WSAGetLastError());
-			return false;
-		}
-		return true;
-	}
-
-	DWORD server::ServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
-		DWORD dwMsgLen = dwTypeSize * dwLen;
-		if (dwMsgLen <= 0) return -1;
-
-		DWORD res = send(sock, pData, dwMsgLen, flags);
-		return res;
-	}
-
-	DWORD server::ServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
-		return recv(sock, pBuffer, dwBufferLen, flags);
-
-	}
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="serverSocket">server's socket</param>
-	/// <param name="addr">address struct buffer for holding addr info. Default value is NULL</param>
-	/// <param name="addrLen">length of addr. Default value is NULL</param>
-	/// <returns>Socket Address Pair if successful, otherwise SAP_NULL</returns>
-	server::SocketAddrPair server::ServerSocket::acceptNewConnection(SOCKET serverSocket) {
-		Addr* pAddr = new Addr();
-
-		SOCKET clientSocket = accept(serverSocket, (sockaddr*)&pAddr->addr, pAddr->length);
-		if (clientSocket <= 1) {
-			printf("Error at establishing new client connection: %ld\n", WSAGetLastError());
-			WSACleanup();
-			return server::SAP_NULL;
-		}
-		SocketAddrPair sadRes = SocketAddrPair(clientSocket, pAddr);
-		std::cout << "Accepting new connection!";
-
-		return sadRes;
-	}
-
-	// --------------------------------------- //
-
-	server::EncryptedServerSocket::EncryptedServerSocket() {
-
-	}
-	server::EncryptedServerSocket::~EncryptedServerSocket() {
-
-	}
-
-	bool server::EncryptedServerSocket::initListen(DWORD backlog) {
-		ServerSocket::initListen(backlog);
-
-		return true;
-	};
-
-	DWORD server::EncryptedServerSocket::sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) {
-		//TODO: add encryption stuff
-
-		return ServerSocket::sendData(sock, pData, dwTypeSize, dwLen, flags);
-	};
-
-	DWORD server::EncryptedServerSocket::recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) {
-		DWORD len = ServerSocket::recvData(sock, pBuffer, dwBufferLen, flags);
-		//TODO: decrypt stuff
-
-		return len;
-	};
-
-	SocketAddrPair server::EncryptedServerSocket::acceptNewConnection() {
-		return ServerSocket::acceptNewConnection(this->getSocket());
-	};
-
-	DWORD server::EncryptedServerSocket::firstEncryptionInteraction(SocketAddrPair sap) {
-		//TODO: do encryption stuff
-		return 1;
-	};
-
-	// --------------------------------------- // 
-
-	server::ServerNetworkManager::ServerNetworkManager() {
-
-	}
-
-	server::ServerNetworkManager::~ServerNetworkManager() {
-		this->killSNM = true;
-
-	}
-
-	void server::ServerNetworkManager::executeAction(Action* pAction) {
-		NetworkAction* pnAction = static_cast<NetworkAction*>(pAction);
-		//TODO: execute action
-	}
-
-	interaction_data_t server::ServerNetworkManager::firstClientInteraction(SocketAddrPair sap) {
-		interaction_data_t idData = { 0 };
-		DWORD res = this->eServerSocket.sendData(sap.first, (CHAR*)&idData, sizeof(idData), 1, 0);
-		res = this->eServerSocket.recvData(sap.first, (CHAR*)&idData, sizeof(idData), 0);
-
-		return idData;
-	}
 
 	// --------------------------------------- //
 
@@ -244,6 +84,16 @@ namespace server {
 			sapRes = pSnm->eServerSocket.acceptNewConnection();
 			if (server::compareSocketAddrPair(sapRes, server::SAP_NULL))
 				continue;
+
+			// Convert the IP address (in network byte order) to a string
+			wchar_t ipAddress[INET_ADDRSTRLEN];
+			InetNtop(AF_INET, &sapRes.second->addr.sin_addr, ipAddress, INET_ADDRSTRLEN);
+
+			// Extract the port number (convert from network byte order to host byte order)
+			u_short port = ntohs(sapRes.second->addr.sin_port);
+
+			std::wcout << "IP Address: " << ipAddress << std::endl;
+			std::cout << "Port: " << port << std::endl;
 
 			DWORD res = pSnm->eServerSocket.firstEncryptionInteraction(sapRes); // make sure communication is encrypted!
 			if (!res) {
@@ -272,20 +122,26 @@ namespace server {
 		RoomManager* pRm = static_cast<RoomManager*>(&pSm->roomManager);
 		SocketAddrPair sap = ptData->sap;
 
-		interaction_data_t idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
-		DWORD roomID = 0; // TODO: make sure to add a hashing function for roomName and put it here!
-		DWORD roomPassword = 0; // TODO: hash res.password;
-		RoomClient* prClient = new RoomClient(sap, idRes.clientName, idRes.isHost);
-		pRoom proom;
+		first_server_client_interaction idRes = pSnm->firstClientInteraction(sap); // first client interaction, first exchange protocol.
+		std::string roomNameStr = std::string(idRes.roomName);
+		std::string roomPassStr = std::string(idRes.roomPassword);
+
+		std::hash<std::string> hasher;
+		size_t roomID = hasher(roomNameStr);
+		size_t roomPassHash = hasher(roomPassStr);
+
+		RoomClient rClient = RoomClient(sap, idRes.clientName, idRes.isHost);
+		pRoomClient prClient = &rClient;
+
+		Room room = Room();
+		pRoom proom = &room;
 
 		std::cout << "Handling client " << sap.first << "\n";
 		std::cout << "Client name: " << prClient->name << " Is client host? " << idRes.isHost << "\n";
 		if (idRes.isHost) {
-			proom = new Room();
-
 			proom->prHost = prClient;
 			proom->roomID = roomID;
-			proom->roomPassword = roomPassword;
+			proom->roomPassword = roomPassHash;
 
 			std::cout << "Creating room " << idRes.roomName << "\n";
 			bool cRes = pRm->createNewRoom(roomID, proom); // creates new room, if new client is a host.
@@ -294,34 +150,42 @@ namespace server {
 				pSnm->threadManager.killThread(sap.first);
 				closesocket(sap.first);
 				delete sap.second;
-				delete prClient;
-				delete proom;
 				return 1;
 			}
 		}
 		else {
-			bool cRes = pRm->addClientToRoom(roomID, prClient);
-			if (!cRes) {
+			proom = pRm->getRoomPtr(roomID);
+			if (proom != nullptr && proom->roomPassword == roomPassHash)
+				bool cRes = pRm->addClientToRoom(roomID, prClient);
+			else {
+
 				//TODO: kill interaction
 				pSnm->threadManager.killThread(sap.first);
 				closesocket(sap.first);
 				delete sap.second;
-				delete prClient;
 				return 1;
 			}
-			proom = pRm->getRoomPtr(roomID);
 		}
 
 		bool on = true;
 		SOCKET clientSock = sap.first;
 		server_room_msg_t msgBuffer = { 0 };
-		std::cout << "going into client " << sap.first << " loop\n";
+		std::cout << "going into client " << clientSock << " loop\n";
 
 		while (on) {
-			DWORD recvRes = pSnm->eServerSocket.recvData(clientSock, (CHAR*)&msgBuffer, sizeof(RoomMessage), 0);
+			DWORD recvRes = pSnm->eServerSocket.recvData(clientSock, (CHAR*)&msgBuffer, sizeof(msgBuffer), 0);
 			if (!recvRes) {
 				std::cout << "receive from client " << clientSock << " failed!\n";
 				on = false;
+				if (prClient->isLeaving)  // check if leaving because the room is closing
+					break;
+				if (prClient->isHost)
+					pSm->endRoom(roomID, false);
+				else {
+					pSm->roomManager.removeClientFromRoom(roomID, prClient);
+				}
+				closesocket(clientSock);
+
 				break;
 			}
 
@@ -331,11 +195,14 @@ namespace server {
 					pSm->endRoom(roomID, false);
 				else
 					pRm->removeClientFromRoom(roomID, prClient);
+
 				on = false;
 				break;
 			case RoomMessageParser::START_PUNCH_MSG:
+				if (!prClient->isHost)
+					continue;
+
 				pSm->endRoom(roomID, true);
-				on = false;
 				break;
 			}
 
@@ -343,120 +210,13 @@ namespace server {
 		// TODO: add a while loop that checks for additional messages.
 		// Such as: start room ,leave room, etc.
 		// dont forget, when client leaves room kill their connection!
-
+		std::cout << "Client " << clientSock << " is leaving!" << std::endl;
 		pSnm->threadManager.killThread(sap.first);
-		closesocket(sap.first);
-		delete sap.second;
-		delete prClient;
-		if (idRes.isHost)
-			delete proom;
+
 		return 1;
 	}
 
 	// --------------------------------------- //
 
-	server::RoomManager::RoomManager() {
-
-	};
-
-	server::RoomManager::~RoomManager() {
-		for (std::pair<DWORD, pRoom> room : this->roomMap) {
-			auto proom = room.second;
-			delete proom->pRoomVector;
-
-		}
-	};
-
-	bool server::RoomManager::createNewRoom(DWORD roomID, pRoom ptrRoom) {
-		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
-
-		return true;
-	};
-
-	bool server::RoomManager::deleteRoom(DWORD roomID) {
-		delete this->roomMap[roomID]->pRoomVector;
-		this->roomMap.erase(roomID);
-
-		return true;
-	};
-
-	bool server::RoomManager::addClientToRoom(DWORD roomID, pRoomClient pClient) {
-		auto ptrRoom = this->roomMap[roomID];
-		if (pClient == nullptr || ptrRoom == nullptr)
-			return false;
-
-		ptrRoom->pRoomVector->push_back(pClient);
-		std::cout << "Added client " << pClient->sap.first << "to room " << roomID;
-
-		return true;
-	};
-
-	bool server::RoomManager::removeClientFromRoom(DWORD roomID, pRoomClient prClient) {
-		auto ptrRoom = this->roomMap[roomID];
-		std::vector<pRoomClient>* pRoomVector = ptrRoom->pRoomVector;
-		auto roomSize = ptrRoom->getRoomSize();
-
-		for (DWORD i = 0; i < roomSize; i++) {
-			if (pRoomVector->at(i) == prClient)
-				pRoomVector->erase(pRoomVector->begin() + i);
-		}
-		std::cout << "removed client " << prClient->name << "from room " << roomID;
-
-		return true;
-	};
-
-	pRoom server::RoomManager::getRoomPtr(DWORD roomID) {
-		return this->roomMap[roomID];
-	}
-	void server::RoomManager::executeAction(Action* pAction) {
-		RoomAction* prAction = static_cast<RoomAction*>(pAction);
-		//TODO: execute the action
-	}
-
-	// --------------------------------------- //
-
-	server::RoomMessageParser::RoomMessageParser() {
-
-	}
-
-	server::RoomMessageParser::~RoomMessageParser() {
-
-	}
-
-	// --------------------------------------- //
-	server::Room::Room() {
-		this->pRoomVector = new std::vector<pRoomClient>;
-		this->prHost = nullptr;
-		this->roomID = 0;
-		this->roomPassword = 0;
-
-	}
-	server::Room::Room(pRoomHost prHost, DWORD roomID, DWORD password) {
-		this->pRoomVector = new std::vector<pRoomClient>;
-		this->prHost = prHost;
-		this->roomID = roomID;
-		this->roomPassword = password;
-	}
-	server::Room::~Room() {
-
-	}
-
-	DWORD server::Room::getRoomSize() {
-		return this->pRoomVector->size() + (this->prHost != nullptr ? 1 : 0);
-	}
-	// --------------------------------------- //
-
-	server::RoomClient::RoomClient() {
-		this->sap = SAP_NULL;
-		this->name = NULL;
-		this->isHost = false;
-	}
-	server::RoomClient::RoomClient(SocketAddrPair sap, CHAR* name, bool isHost) {
-		this->sap = sap;
-		this->name = name;
-		this->isHost = isHost;
-	}
-	server::RoomClient::~RoomClient() {
-
-	}
+	
 }

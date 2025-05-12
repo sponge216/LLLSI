@@ -13,7 +13,7 @@ public:
 
 	ThreadSafeQueue() {
 		InitializeCriticalSection(&this->access);
-		this->queue_semaphore = CreateSemaphore(NULL, 0, MAXINT, NULL);
+		this->queue_semaphore = CreateSemaphore(NULL, 0, ((INT)(((UINT)~((UINT)0)) >> 1)), NULL);
 	}
 	~ThreadSafeQueue() {
 		DeleteCriticalSection(&this->access);
@@ -49,7 +49,7 @@ public:
 			throw std::runtime_error("semaphore timed out");
 
 		EnterCriticalSection(&this->access);
-		if (this->queue.empty()) {
+		if (this->queue.empty()) {	
 			LeaveCriticalSection(&this->access);
 			throw std::runtime_error("empty queue");
 		}
