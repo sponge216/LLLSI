@@ -1,7 +1,6 @@
 #include "concurrency.h"
 
 namespace concurrency {
-
 	concurrency::ThreadManager::ThreadManager() {
 		this->threadMap.reserve(concurrency::ThreadManager::INITIAL_MAP_SIZE);
 	}
@@ -100,45 +99,40 @@ namespace concurrency {
 
 	// -------------------------------------------------
 
+
 	concurrency::CriticalSection::CriticalSection() {
 		this->cs = { 0 };
-		this->init();
-
-	}
-	concurrency::CriticalSection::~CriticalSection() {
-		this->del();
-
-	}
-	void concurrency::CriticalSection::init() {
 		InitializeCriticalSection(&this->cs);
 
 	}
+
+	concurrency::CriticalSection::~CriticalSection() {
+		DeleteCriticalSection(&this->cs);
+	}
+
 	void concurrency::CriticalSection::enter() {
 		EnterCriticalSection(&this->cs);
-
 	}
+
 	DWORD concurrency::CriticalSection::tryEntry() {
 		return TryEnterCriticalSection(&this->cs);
-
 	}
+
 	void concurrency::CriticalSection::release() {
 		LeaveCriticalSection(&this->cs);
-
 	}
-	void concurrency::CriticalSection::del() {
-		DeleteCriticalSection(&this->cs);
 
-	}
 	PCRITICAL_SECTION concurrency::CriticalSection::getCSPointer() {
 		return &this->cs;
-
 	}
+
 
 	// -------------------------------------------------
 
 	concurrency::ConditionVariable::ConditionVariable() {
 		this->cv = { 0 };
-		this->init();
+		this->timeout = INFINITE;  // Default timeout set to infinite
+		this->cs = CriticalSection();
 
 	}
 	concurrency::ConditionVariable::~ConditionVariable() {
@@ -147,6 +141,8 @@ namespace concurrency {
 	}
 	void concurrency::ConditionVariable::init() {
 		InitializeConditionVariable(&this->cv);
+		this->cs = CriticalSection();  // Make sure CriticalSection is initialized
+
 
 	}
 	void concurrency::ConditionVariable::wake() {
@@ -159,8 +155,9 @@ namespace concurrency {
 	}
 	void concurrency::ConditionVariable::sleep() {
 		this->cs.enter();
-		SleepConditionVariableCS(&this->cv, this->cs.getCSPointer(), this->timeout);
-		this->cs.release();
+		if (SleepConditionVariableCS(&this->cv, this->cs.getCSPointer(), this->timeout) == 0) {
+			std::cerr << "Failed to sleep on condition variable. Error: " << GetLastError() << std::endl;
+		}
 
 	}
 	void concurrency::ConditionVariable::setTimeout(DWORD timeout) {

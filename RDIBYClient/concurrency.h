@@ -86,9 +86,9 @@ namespace concurrency {
 		ThreadManager();
 		~ThreadManager();
 
-		virtual bool createNewThread(DWORD key, pConThread ctThread);
-		virtual HANDLE createNewEvent();
-		virtual bool killThread(DWORD key);
+		bool createNewThread(DWORD key, pConThread ctThread);
+		HANDLE createNewEvent();
+		bool killThread(DWORD index);
 
 	private:
 		std::unordered_map<DWORD, pConThread> threadMap;

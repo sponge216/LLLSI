@@ -1,7 +1,6 @@
 #include "concurrency.h"
 
 namespace concurrency {
-
 	concurrency::ThreadManager::ThreadManager() {
 		this->threadMap.reserve(concurrency::ThreadManager::INITIAL_MAP_SIZE);
 	}

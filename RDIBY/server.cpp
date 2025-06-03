@@ -32,6 +32,8 @@ namespace server {
 			msgToHost.msgType = RoomMessageParser::START_PUNCH_MSG;
 			memcpy_s(&msgToClient.msgData.sockAddr4, sizeof(msgToClient.msgData.sockAddr4), pHostAddr, sizeof(*pHostAddr));
 
+			pSnm->eServerSocket.sendData(hostSock, (CHAR*)&msgToClient, sizeof(msgToHost), 1, 0);
+
 			// send host all the clients addrs
 			for (pRoomClient prClient : clientsVec) {
 				sockaddr_in* pClientAddr = &prClient->sap.second->addr;
@@ -46,8 +48,16 @@ namespace server {
 			// send host addr to clients
 			for (pRoomClient prClient : clientsVec) {
 				SOCKET clientSock = prClient->sap.first;
+				sockaddr_in* pClientAddr = &prClient->sap.second->addr;
 				prClient->isLeaving = true;
+
+				ZeroMemory(&msgToHost, sizeof(msgToHost));
+				msgToHost.msgType = RoomMessageParser::START_PUNCH_MSG;
+				memcpy_s(&msgToHost.msgData.sockAddr4, sizeof(msgToHost.msgData.sockAddr4), pClientAddr, sizeof(*pClientAddr));
+
 				pSnm->eServerSocket.sendData(clientSock, (CHAR*)&msgToClient, sizeof(msgToClient), 1, 0);
+				pSnm->eServerSocket.sendData(clientSock, (CHAR*)&msgToHost, sizeof(msgToHost), 1, 0);
+
 			}
 		}
 
@@ -56,6 +66,7 @@ namespace server {
 			pSnm->eServerSocket.sendData(clientSock, (CHAR*)&leaveMsg, sizeof(leaveMsg), 1, 0);
 			std::cout << "Sending off client " << clientSock << std::endl;
 		}
+		prHost->isLeaving = true;
 		pSnm->eServerSocket.sendData(hostSock, (CHAR*)&leaveMsg, sizeof(leaveMsg), 1, 0);
 		std::cout << "Sending off host " << hostSock << std::endl;
 
@@ -218,5 +229,5 @@ namespace server {
 
 	// --------------------------------------- //
 
-	
+
 }

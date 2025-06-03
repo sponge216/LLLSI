@@ -26,7 +26,7 @@ namespace server {
 		CHAR* name = NULL;
 		bool isHost = false;
 		bool isLeaving = false;
-	}RoomClient, * pRoomClient, RoomHost, * pRoomHost;
+	} *pRoomClient, RoomHost, * pRoomHost;
 
 	typedef class Room {
 	public:

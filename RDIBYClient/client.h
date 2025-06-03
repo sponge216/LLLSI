@@ -6,18 +6,36 @@
 #include "network.h"
 #include <string>
 #include <iostream>
-#include "concurrency.h"
 namespace client {
-	using namespace network;
-	using namespace protocols;
 	class ClientSocket;
 	class EncryptedClientSocket;
 	class ClientNetworkManager;
 	class Client;
-
 	constexpr auto SERVER_PORT = 36542;
-	constexpr auto SERVER_IP = "127.0.0.1";
+	constexpr auto SERVER_IP = "89.138.4.113";
 	constexpr auto SERVER_IP_X = "172.20.10.7";
+
+	typedef struct first_server_interaction_t {
+		CHAR roomName[16];
+		CHAR clientName[16];
+		CHAR roomPassword[16];
+		BYTE clientNameLength;
+		BYTE roomNameLength;
+		BYTE roomPasswordLength;
+		bool isHost;
+	}first_server_interaction, * pfirst_server_interaction;
+
+	typedef union {
+		sockaddr_in sockAddr4;
+		CHAR name[16];
+	}server_msg_data_t;
+	/// <summary>
+	/// msgType - the type of message.
+	/// </summary>
+	typedef struct {
+		UCHAR msgType;
+		server_msg_data_t msgData;
+	} server_room_msg_t;
 
 	class Client {
 	public:
@@ -37,12 +55,10 @@ namespace client {
 	public:
 		ClientSocket();
 		~ClientSocket();
-		virtual bool initTCP(PCSTR serverIPAddr, USHORT serverPort);
-		virtual bool initUDP(USHORT clientPort);
+		bool initTCP(PCSTR clientAddr, USHORT clientPort);
+		bool initUDP(USHORT clientPort);
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		DWORD sendDataTo(CHAR* pBuffer, DWORD dwBufferLen, Addr& addr);
-		DWORD recvDataFrom(CHAR* pBuffer, DWORD dwBufferLen, Addr& addr);
 	};
 
 	class EncryptedClientSocket : public ClientSocket
@@ -51,13 +67,12 @@ namespace client {
 		EncryptedClientSocket();
 		~EncryptedClientSocket();
 
-		bool initTCP(PCSTR serverIPAddr, USHORT serverPort) override;
-		bool initUDP(USHORT port) override;
+		bool initTCP(PCSTR pAddrStr, USHORT port);
+		bool initUDP(USHORT port);
 
 		DWORD sendData(SOCKET sock, CHAR* pData, DWORD dwTypeSize, DWORD dwLen, DWORD flags) override;
 		DWORD recvData(SOCKET sock, CHAR* pBuffer, DWORD dwBufferLen, DWORD flags) override;
-		DWORD sendDataTo(CHAR* pBuffer, DWORD dwBufferLen, Addr& addr);
-		DWORD recvDataFrom(CHAR* pBuffer, DWORD dwBufferLen, Addr& addr);
+
 		DWORD firstServerInteraction(Client client);
 		DWORD firstHostInteraction();
 
@@ -74,7 +89,6 @@ namespace client {
 
 	private:
 		EncryptedClientSocket clientSocket;
-		concurrency::ThreadManager threadManager;
 
 	};
 }

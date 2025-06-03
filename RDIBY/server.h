@@ -38,7 +38,7 @@ namespace server {
 		ServerManager();
 		~ServerManager();
 
-		bool endRoom(size_t roomID, bool startStreaming);
+		virtual bool endRoom(size_t roomID, bool startStreaming);
 
 		ServerNetworkManager snManager;
 		RoomManager roomManager;
@@ -46,6 +46,11 @@ namespace server {
 		ServerMediator sMediator;
 	private:
 
+	};
+
+	class ServerAction : public Action {
+	public:
+		ActionData* getActionData() override;
 	};
 }
 #endif // APP_SERVER_H

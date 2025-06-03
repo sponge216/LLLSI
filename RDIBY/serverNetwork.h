@@ -23,8 +23,6 @@ namespace server {
 	class EncryptedServerSocket;
 	class ServerNetworkManager;
 
-
-
 	class NetworkAction : public Action {
 	public:
 		ActionData* getActionData() override;
@@ -68,7 +66,6 @@ namespace server {
 
 	};
 
-
 	class ServerNetworkManager : public IServerActionListener {
 	public:
 		ServerNetworkManager();
@@ -78,9 +75,9 @@ namespace server {
 		concurrency::ThreadManager threadManager;
 		bool killSNM = false;
 
-		void executeAction(Action* pAction) override;
+		virtual void executeAction(Action* pAction) override;
 
-		first_server_client_interaction firstClientInteraction(SocketAddrPair sap);
+		virtual first_server_client_interaction firstClientInteraction(SocketAddrPair sap);
 
 	private:
 

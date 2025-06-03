@@ -13,6 +13,7 @@ namespace server {
 	};
 
 	bool server::RoomManager::createNewRoom(size_t roomID, pRoom ptrRoom) {
+		std::cout << ptrRoom << std::endl;
 		this->roomMap.insert(std::make_pair(roomID, ptrRoom));
 
 		return true;

@@ -9,6 +9,7 @@
 #include <handleapi.h>
 #include <synchapi.h>
 #include <memory>
+#include <Windows.h>
 
 namespace concurrency {
 
@@ -86,9 +87,9 @@ namespace concurrency {
 		ThreadManager();
 		~ThreadManager();
 
-		virtual bool createNewThread(DWORD key, pConThread ctThread);
-		virtual HANDLE createNewEvent();
-		virtual bool killThread(DWORD key);
+		bool createNewThread(DWORD key, pConThread ctThread);
+		HANDLE createNewEvent();
+		bool killThread(DWORD index);
 
 	private:
 		std::unordered_map<DWORD, pConThread> threadMap;

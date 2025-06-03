@@ -19,6 +19,7 @@ public:
 	IServerActionListener() : IActionListener() {
 
 	}
+	
 };
 
 #endif //APP_SERVER_MEDIATOR_H
