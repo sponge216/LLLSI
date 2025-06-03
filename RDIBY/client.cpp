@@ -3,6 +3,7 @@
 //TODO: CHANGE ALL FUNCTIONS TO RETURN ERROR CODES!!
 
 namespace client {
+	using namespace client;
 	client::Client::Client() {
 		this->isHost = false;
 	}
@@ -177,4 +178,152 @@ namespace client {
 
 	}
 
-}
+	PacketManager::PacketManager() {
+	};
+
+	PacketManager::~PacketManager() {
+	};
+
+	void PacketManager::sendPacket(rtmp_packet packetHeader, const BYTE* pPacketData, SIZE_T dataSize) {
+		SIZE_T totalPacketSize = sizeof(packetHeader) + dataSize;
+		std::vector<CHAR> packet(totalPacketSize);
+
+		::memcpy_s(packet.data(), totalPacketSize, &packetHeader, sizeof(packetHeader));
+		if (dataSize > 0)
+			::memcpy_s(packet.data() + sizeof(packetHeader), dataSize, pPacketData, dataSize);
+
+		this->clientSock.sendDataTo(packet.data(), totalPacketSize, this->hostAddr);
+	};
+
+
+	void PacketManager::handleIncomingPackets(packetHandlingMap& funcMap) {
+
+
+		rtmp_packet pkt = { 0 };
+
+		while (IClientComponent::isProgramOn()) {
+			if (this->clientSock.recvDataFrom((char*)&pkt, sizeof(pkt), this->hostAddr) < 0)
+				continue;
+
+			funcMap[pkt.type](pkt);
+		}
+	};
+
+	void PacketManager::ackPacket(DWORD seqNum) {
+		rtmp_packet ackPkt = { 0 };
+		ackPkt.type = PACKET_TYPE_CONTROL;
+		ackPkt.sequenceNumber = seqNum;
+		this->clientSock.sendDataTo((char*)&ackPkt, sizeof(ackPkt), this->hostAddr);
+	}
+
+
+	client::FramePacketsStream::FramePacketsStream() {
+		this->continueStream();
+	}
+
+	client::FramePacketsStream::~FramePacketsStream() {
+
+	}
+	void client::FramePacketsStream::initStream() {};
+
+	void client::FramePacketsStream::initStream(PacketManager& packetManager) {
+		rtmp_packet_t pkt = { 0 };
+		int len = sizeof(packetManager.hostAddr);
+		Addr recvAddr = Addr();
+
+		int packetSize = 0;
+		while (IClientComponent::isProgramOn() && this->isStreamOn()) {
+			CHAR* packet = new CHAR[this->getFrameSize()];
+			if ((packetSize = packetManager.clientSock.recvDataFrom(packet, this->getFrameSize(), recvAddr)) < 0) {
+				delete[] packet;
+				continue;
+			}
+			memcpy_s(&pkt, sizeof(pkt), packet, sizeof(pkt));
+
+			packetManager.ackPacket(pkt.sequenceNumber);
+			auto item = FramePacketStreamData(packet, packetSize);
+
+			this->streamContainer.push(item);
+		}
+	}
+
+	// client Stream Data
+	client::FramePacketStreamData::FramePacketStreamData(CHAR* data) { this->data = data; };
+	client::FramePacketStreamData::FramePacketStreamData(CHAR* data, SIZE_T size) { this->data = data; this->size = size; };
+	client::FramePacketStreamData::~FramePacketStreamData() {};
+	CHAR* const& client::FramePacketStreamData::getData() { return this->data; };
+	const BYTE* client::FramePacketStreamData::getBytesDataPtr() { return (BYTE*)this->data; };
+	SIZE_T client::FramePacketStreamData::getSize() { return this->size; }
+
+	// client Stream Container
+	client::FramePacketsStreamContainer::FramePacketsStreamContainer() {};
+	client::FramePacketsStreamContainer::~FramePacketsStreamContainer() {};
+	client::FramePacketStreamData client::FramePacketsStreamContainer::pop() { return this->tsFrameQueue.Pop(); };
+	client::FramePacketStreamData client::FramePacketsStreamContainer::popFront() { return this->tsFrameQueue.Pop(); };
+	client::FramePacketStreamData client::FramePacketsStreamContainer::popBack() { return this->tsFrameQueue.Pop(); };
+	void client::FramePacketsStreamContainer::push(FramePacketStreamData data) { this->tsFrameQueue.Push(data); };
+	void client::FramePacketsStreamContainer::pushFront(FramePacketStreamData data) { this->tsFrameQueue.Push(data); };
+	void client::FramePacketsStreamContainer::pushBack(FramePacketStreamData data) { this->tsFrameQueue.Push(data); };
+	bool client::FramePacketsStreamContainer::isEmpty() { return this->tsFrameQueue.isEmpty(); };
+	void client::FramePacketsStreamContainer::clear() { this->tsFrameQueue.Clear(); };
+
+	// --------------------------------------------------
+
+	void client::FrameBufferStream::initStream(FramePacketsStream& packetStream/*stream::VectorStream<DWORD>& constructedFramesStream*/) {
+		rtmp_packet pkt = { 0 };
+		WORD sizeOfRTMP = sizeof(rtmp_packet);
+		WORD packetSize = 0;
+		while (isProgramOn()) {
+			while (!this->isStreamOn() && !packetStream.isStreamOn());// loop so it doesnt send when the receiver is overwhelmed
+
+			FramePacketStreamData packet = packetStream.frontFrame();
+			memcpy_s(&pkt, sizeof(pkt), packet.getBytesDataPtr(), sizeof(pkt)); // extract packet header from buffer
+
+			if (pkt.type != PACKET_TYPE_STREAM) continue;
+
+			packetSize = pkt.size;
+			rtsmp_packet& rts = pkt.rtmp_data.rtsmp;
+			DWORD frameNum = rts.frameNumber;
+
+			auto& frameData = this->streamContainer.get(frameNum);
+			auto& fb = frameData.getData();
+			if (fb.chunks.empty()) {
+				fb.expectedSize = pkt.slidingWindow; // size of current frame
+				fb.frameNumber = frameNum;
+				fb.chunks.resize(fb.expectedSize);
+			}
+
+			fb.totalPackets++;
+			fb.totalSize += packetSize - sizeOfRTMP;
+
+			memcpy_s(fb.chunks.data() + rts.offset * packetStream.getFrameSize(),
+				size_t(packetSize - sizeOfRTMP),
+				packet.getBytesDataPtr() + sizeOfRTMP,
+				size_t(packetSize - sizeOfRTMP));
+			delete[] packet.getBytesDataPtr();
+
+			if (fb.totalSize == fb.expectedSize) {
+				//frameNumQueue.Push(frameNum);
+			}
+
+		}
+	}
+
+	// client Stream Data
+	client::FrameBufferStreamData::FrameBufferStreamData() {};
+	client::FrameBufferStreamData::FrameBufferStreamData(FrameBuffer data) { this->data = data; };
+	client::FrameBufferStreamData::~FrameBufferStreamData() {};
+	client::FrameBuffer& client::FrameBufferStreamData::getData() { return this->data; };
+	const BYTE* client::FrameBufferStreamData::getBytesDataPtr() { return this->data.chunks.data(); };
+	SIZE_T client::FrameBufferStreamData::getSize() { return this->data.chunks.size(); }
+
+	// client Stream Container
+	client::FrameBufferStreamContainer::FrameBufferStreamContainer() {};
+	client::FrameBufferStreamContainer::~FrameBufferStreamContainer() {};
+	FrameBufferStreamData& client::FrameBufferStreamContainer::get(DWORD key) { return this->activeFrames[key]; };
+	void client::FrameBufferStreamContainer::push(DWORD key, FrameBufferStreamData value) { this->activeFrames.emplace(key, value); };
+	bool client::FrameBufferStreamContainer::isEmpty() { return this->activeFrames.empty(); };
+	void client::FrameBufferStreamContainer::clear() { this->activeFrames.clear(); };
+	void client::FrameBufferStreamContainer::remove(DWORD key) { this->activeFrames.erase(key); };
+};
+

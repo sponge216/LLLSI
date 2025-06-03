@@ -1,4 +1,5 @@
 // video.h
+#pragma once
 
 #ifndef APP_VIDEO_H 
 #define APP_VIDEO_H  
@@ -9,8 +10,14 @@
 #include <Shlwapi.h>
 #include <String>
 #include <vector>
-#include <wrl/client.h>
-#include <memory>
+#include <wrl/client.h> // For Microsoft::WRL::ComPtr
+#include <chrono>
+#include <iostream>
+#include "IHostComponent.h"
+#include <thread>
+#include "datastructures.h"
+#include "stream.h"
+
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment (lib, "gdiplus.lib")
 #pragma comment(lib, "Ole32.lib")
@@ -19,6 +26,13 @@
 namespace video {
 	using namespace Gdiplus;
 	using Microsoft::WRL::ComPtr;
+
+	extern GdiplusStartupInput gsi;
+	extern ULONG_PTR gdiToken;
+	extern Status gdiRes;
+	extern void InitGdiplus();
+
+
 
 	struct frame_data_t {
 		BYTE* pFrame = nullptr;
@@ -48,76 +62,36 @@ namespace video {
 	};
 	using SharedFramePtr = std::shared_ptr<video::frame_data_t>;
 
+	class VideoStreamData : public stream::StreamData<SharedFramePtr> {
+	public:
+		VideoStreamData(SharedFramePtr data);
+		~VideoStreamData();
+		const SharedFramePtr& getData() override;
+		const BYTE* getBytesDataPtr() override;
+		SIZE_T getSize() override;
+	};
+
 	class VideoCodec;
 	class VideoCapture;
+	class VideoStream;
 
+	static Gdiplus::EncoderParameters getEncoderParams(ULONG* pQuality);
 
-
-	static Gdiplus::EncoderParameters getEncoderParams(ULONG* pQuality) {
-		Gdiplus::EncoderParameters encoderParams;
-		encoderParams.Count = 1;
-		encoderParams.Parameter[0].Guid = Gdiplus::EncoderQuality;
-		encoderParams.Parameter[0].Type = EncoderParameterValueTypeLong;
-		encoderParams.Parameter[0].NumberOfValues = 1;
-		encoderParams.Parameter[0].Value = pQuality;
-
-		return encoderParams;
-	};
 	class VideoCodec {
 	public:
-		VideoCodec() {
-			this->quality = 80;
-			this->encParams = getEncoderParams(&this->quality);
-			this->encoder = CLSID_NULL;
-		};
+		VideoCodec();
 
-		virtual void setCodec(CLSID encoder) {
-			this->encoder = encoder;
-		};
+		virtual void setCodec(CLSID encoder);
 
-		virtual CLSID getCodec() {
-			return this->encoder;
-		};
+		virtual CLSID getCodec();
 
-		virtual void setQuality(ULONG quality) {
-			this->quality = quality;
-		};
+		virtual void setQuality(ULONG quality);
 
-		virtual ComPtr<IStream> encodeFrame(HBITMAP& hBmp) {
-			Bitmap bmp(hBmp, NULL);
-			ComPtr<IStream> pStream;
-			HRESULT hr = CreateStreamOnHGlobal(NULL, TRUE, pStream.GetAddressOf());
-			if (FAILED(hr))
-				return nullptr;
+		virtual ComPtr<IStream> encodeFrame(HBITMAP& hBmp);
 
-			bmp.Save(pStream.Get(), &this->encoder, &this->encParams);
-			return pStream;
-		};
+		virtual ComPtr<IStream> decodeFrame();
 
-		virtual IStream* decodeFrame() {
-			return nullptr;
-		};
-
-		static CLSID getEncoder(const wchar_t encoderName[]) {
-			static CLSID cached = {};
-			static bool initialized = false;
-
-			if (!initialized) {
-				UINT sz = 0, count = 0;
-				GetImageEncodersSize(&count, &sz);
-				std::vector<BYTE> buf(sz);
-				auto* enc = reinterpret_cast<ImageCodecInfo*>(buf.data());
-				GetImageEncoders(count, sz, enc);
-				for (UINT i = 0; i < count; ++i) {
-					if (wcscmp(enc[i].MimeType, encoderName) == 0) {
-						cached = enc[i].Clsid;
-						break;
-					}
-				}
-				initialized = true;
-			}
-			return cached;
-		};
+		static CLSID getEncoder(const wchar_t encoderName[]);
 
 	private:
 		CLSID encoder;
@@ -126,47 +100,49 @@ namespace video {
 	};
 	class VideoCapture {
 	public:
+		VideoCapture();
+		~VideoCapture();
+
+		virtual void init();
+		virtual void setCodec(CLSID codec);
+		virtual bool getCurrentFrame(frame_data_t* pFrameData);
+	private:
+		int screenWidth;
+		int screenHeight;
+		HDC hScreen;
+		HDC hMem;
+		HBITMAP hBmp;
 		VideoCodec codec;
 
-		VideoCapture() {
-
-		};
-
-		virtual bool getCurrentFrame(HDC& hScreen, HDC& hMem, HBITMAP& hBmp, frame_data_t& frameData) {
-			HBITMAP oldhBmp = (HBITMAP)SelectObject(hMem, hBmp);
-			int w = GetSystemMetrics(SM_CXSCREEN);
-			int h = GetSystemMetrics(SM_CYSCREEN);
-			BitBlt(hMem, 0, 0, w, h, hScreen, 0, 0, SRCCOPY);
-
-			// Now we receive a ComPtr<IStream>
-			ComPtr<IStream> pStream = this->codec.encodeFrame(hBmp);
-			if (!pStream) {
-				SelectObject(hMem, oldhBmp);
-				return false;
-			}
-
-			HGLOBAL hMemBuf = NULL;
-			HRESULT res = GetHGlobalFromStream(pStream.Get(), &hMemBuf);
-			if (FAILED(res)) {
-				SelectObject(hMem, oldhBmp);
-				return false;
-			}
-
-			BYTE* pFrame = (BYTE*)GlobalLock(hMemBuf);
-			if (!pFrame) {
-				SelectObject(hMem, oldhBmp);
-				return false;
-			}
-
-			// Set frame data fields with safety
-			frameData.pFrame = pFrame;
-			frameData.hMemBuf = hMemBuf;
-			frameData.pStream = pStream;
-			frameData.frameSize = GlobalSize(hMemBuf);
-
-			SelectObject(hMem, oldhBmp);
-			return true;
-		};
 	};
-}
+
+	class VideoStreamContainer : public stream::StreamVectorContainer<VideoStreamData> {
+	public:
+		VideoStreamContainer();
+		~VideoStreamContainer();
+
+		VideoStreamData pop() override;
+		VideoStreamData popFront() override;
+		VideoStreamData popBack() override;
+		void push(VideoStreamData data) override;
+		void pushFront(VideoStreamData data) override;
+		void pushBack(VideoStreamData data) override;
+		bool isEmpty() override;
+		void clear() override;
+	private:
+		ThreadSafeQueue<VideoStreamData> tsFrameQueue;
+	};
+
+	class VideoStream : public stream::VectorStream<VideoStreamData, VideoStreamContainer>, public IHostComponent {
+	public:
+		VideoStream();
+		~VideoStream();
+
+		void initStream() override;
+
+	private:
+		VideoCapture videoCapture;
+		std::atomic<std::chrono::milliseconds> FPS;
+	};
+};
 #endif //APP_VIDEO_H
